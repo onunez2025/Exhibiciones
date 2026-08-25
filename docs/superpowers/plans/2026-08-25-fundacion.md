@@ -352,13 +352,13 @@ describe('cleanEnv', () => {
     });
 
     it('returns the raw value when there are no surrounding quotes', () => {
-        process.env[KEY] = '@s0le@dm1nAI#82,';
-        expect(cleanEnv(KEY)).toBe('@s0le@dm1nAI#82,');
+        process.env[KEY] = '@Fake#Pass,1';
+        expect(cleanEnv(KEY)).toBe('@Fake#Pass,1');
     });
 
     it('strips a single layer of surrounding double quotes', () => {
-        process.env[KEY] = '"@s0le@dm1nAI#82,"';
-        expect(cleanEnv(KEY)).toBe('@s0le@dm1nAI#82,');
+        process.env[KEY] = '"@Fake#Pass,1"';
+        expect(cleanEnv(KEY)).toBe('@Fake#Pass,1');
     });
 
     it('strips a single layer of surrounding single quotes', () => {
@@ -779,14 +779,14 @@ describe('buildConfig', () => {
         process.env.DB_SERVER = 'soledbserver.database.windows.net';
         process.env.DB_NAME = 'soledb-puntoventa';
         process.env.DB_USER = 'soledbserveradmin';
-        process.env.DB_PASSWORD = '"@s0le@dm1nAI#82,"';
+        process.env.DB_PASSWORD = '"@Fake#Pass,1"';
 
         const config = buildConfig();
 
         expect(config.server).toBe('soledbserver.database.windows.net');
         expect(config.database).toBe('soledb-puntoventa');
         expect(config.user).toBe('soledbserveradmin');
-        expect(config.password).toBe('@s0le@dm1nAI#82,');
+        expect(config.password).toBe('@Fake#Pass,1');
     });
 
     it('defaults to empty strings when env vars are unset', () => {
