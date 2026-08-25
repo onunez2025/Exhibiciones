@@ -7,3 +7,5 @@ dist-server/
 .DS_Store
 Thumbs.db
 node_modules/.tmp/
+.worktrees/
+.superpowers/
