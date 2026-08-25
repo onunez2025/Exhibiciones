@@ -59,6 +59,7 @@ describe('apiClient', () => {
     });
 
     it('redirects to /login on a 401 response', async () => {
+        getTokenMock.mockReturnValue('abc123');
         const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401 });
         vi.stubGlobal('fetch', fetchMock);
 
