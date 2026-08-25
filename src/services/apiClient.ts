@@ -24,7 +24,12 @@ async function request<T>(
         credentials: 'include',
     });
 
-    if (response.status === 401) {
+    if (response.status === 401 && token) {
+        // Había un token adjunto y el servidor lo rechazó — la sesión sí
+        // expiró o es inválida. Sin token (ej. un intento de login fallido)
+        // no había sesión que expirar: se deja caer al bloque de abajo para
+        // que el mensaje de error real del servidor (ej. "Credenciales
+        // inválidas") llegue a quien hizo la llamada.
         StorageService.clear();
         window.location.href = '/login?expired=true';
         throw new Error('Session expired');
