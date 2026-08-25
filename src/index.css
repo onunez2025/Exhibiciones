@@ -1,3 +1,56 @@
 @import "tailwindcss";
 
-body { margin: 0; font-family: system-ui, sans-serif; }
+@theme {
+    --color-primary: #4C5F80;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #A4ABB1;
+    --color-background: #f9fafb;
+    --color-foreground: #272020;
+    --color-card: #ffffff;
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #64748b;
+    --color-border: #e2e8f0;
+
+    --color-cb-bg: #f8fafc;
+    --color-cb-border: #e2e8f0;
+    --color-cb-text-primary: #272020;
+    --color-cb-text-secondary: #64748b;
+    --color-cb-neutral: #94a3b8;
+    --color-cb-slate: #94a3b8;
+    --color-cb-blue: #4C5F80;
+
+    --radius-cb-chip: 4px;
+    --radius-cb-btn: 8px;
+    --radius-cb-card: 12px;
+    --radius-cb-modal: 16px;
+
+    --shadow-cb-level-1: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+    --shadow-cb-level-2: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+    --shadow-cb-level-3: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+}
+
+.dark {
+    /* Tinte más claro del navy de marca para mantener contraste sobre fondo oscuro */
+    --color-primary: #7C93B8;
+    --color-primary-foreground: #0f172a;
+    --color-background: #020617;
+    --color-foreground: #f8fafc;
+    --color-card: #0f172a;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+    --color-border: #1e293b;
+
+    --color-cb-bg: #0f172a;
+    --color-cb-border: #1e293b;
+    --color-cb-text-primary: #f8fafc;
+    --color-cb-text-secondary: #94a3b8;
+    --color-cb-blue: #7C93B8;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans, system-ui, sans-serif); background-color: var(--color-background); color: var(--color-foreground); }
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-cb-border); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-cb-neutral); }

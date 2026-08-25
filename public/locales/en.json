@@ -1,0 +1,30 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "logout": "Log Out",
+        "cancel": "Cancel"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "main_menu": "Main Menu",
+        "change_language": "Change language",
+        "current_language": "English"
+    },
+    "auth": {
+        "subtitle": "Enter your credentials to access the platform.",
+        "title": "Sign In",
+        "username": "Username",
+        "username_placeholder": "Enter your username",
+        "password": "Password",
+        "password_placeholder": "Enter your password",
+        "login_button": "Sign In",
+        "error_generic": "Error signing in",
+        "logout_confirm_title": "Sign out",
+        "logout_confirm_message": "Are you sure you want to sign out?"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome, {{name}}.",
+        "subtitle": "Trade Marketing Exhibitions System — Grupo Sole"
+    }
+}
