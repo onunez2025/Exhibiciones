@@ -1109,11 +1109,15 @@ export function checkPermission(permission: string) {
 > **Nota:** `logAudit` asume una tabla `EXHIBICION.TB_AUDIT_LOG` propia (no la
 > `GAC_APP_TB_AUDIT_LOG` compartida del ecosistema, que espera `UserId`
 > `UNIQUEIDENTIFIER` y nuestros usuarios usan `IN_usuario_id BIGINT` —
-> incompatibles). Esta tabla **no existe todavía** en `soledb-puntoventa`;
-> creación de la tabla es responsabilidad de Task 8 (paso de verificación
-> manual) — hasta entonces `logAudit` falla en silencio y solo loguea a
-> consola, lo cual es el comportamiento correcto (nunca debe tumbar el
-> request que la llama).
+> incompatibles). Esta tabla **no existe todavía** en `soledb-puntoventa`, y
+> ninguna tarea de este plan la crea — `checkPermission` (el único llamador
+> de `logAudit`) no lo invoca ningún endpoint dentro de Fundación (el único
+> gate activo es `authGuard`, no permisos de módulo), así que esta ruta de
+> código nunca se ejecuta hoy. `logAudit` falla en silencio y solo loguea a
+> consola si algo la invoca sin que la tabla exista — nunca debe tumbar el
+> request que la llama. La creación de la tabla queda pendiente para el
+> primer sub-proyecto que efectivamente conecte `checkPermission` a una
+> ruta real.
 
 - [ ] **Step 8: Run the full test suite to confirm nothing broke**
 
