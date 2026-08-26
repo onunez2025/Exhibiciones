@@ -42,7 +42,9 @@ export function ExhibicionesPage() {
     // mobile) agrega al final y usa `loadingMore`/`loadMoreError` — un
     // fallo cargando "más" no debe borrar lo que ya se ve, y debe ofrecer
     // reintentar en vez de reintentar solo automáticamente en bucle.
+    const requestSeq = useRef(0);
     const fetchPage = useCallback(async (pageToLoad: number, append: boolean) => {
+        const seq = ++requestSeq.current;
         if (append) { setLoadingMore(true); setLoadMoreError(false); }
         else { setLoading(true); setError(''); }
         try {
@@ -57,14 +59,18 @@ export function ExhibicionesPage() {
             if (filtros.fechaHasta) params.set('fechaHasta', filtros.fechaHasta);
 
             const data = await apiClient.get<ExhibicionesListResponse>(`/exhibiciones?${params.toString()}`);
+            if (seq !== requestSeq.current) return; // una petición más reciente ya superó a esta — se descarta
             setTotal(data.total);
             setPage(data.page);
             setItems(prev => (append ? [...prev, ...data.items] : data.items));
         } catch (err) {
+            if (seq !== requestSeq.current) return; // error obsoleto — se ignora también
             const message = err instanceof Error ? err.message : t('exhibiciones_lista.error_cargar');
             if (append) setLoadMoreError(true); else setError(message);
         } finally {
-            if (append) setLoadingMore(false); else setLoading(false);
+            if (seq === requestSeq.current) {
+                if (append) setLoadingMore(false); else setLoading(false);
+            }
         }
     }, [pageSize, search, filtros, t]);
 
@@ -132,8 +138,9 @@ export function ExhibicionesPage() {
                         <button
                             type="button"
                             onClick={() => fetchPage(isDesktop ? page : 1, false)}
+                            disabled={loading}
                             title={t('exhibiciones_lista.reintentar')}
-                            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-cb-border text-cb-text-secondary hover:text-primary hover:bg-primary/10 transition-colors duration-150 active:scale-95 cursor-pointer"
+                            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-cb-border text-cb-text-secondary hover:text-primary hover:bg-primary/10 transition-colors duration-150 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <RefreshCw className={loading ? 'w-4 h-4 animate-spin' : 'w-4 h-4'} />
                         </button>
