@@ -48,3 +48,40 @@ export interface ExhibicionesFiltros {
     fechaDesde?: string;
     fechaHasta?: string;
 }
+
+export interface ExhibicionComponenteItem {
+    id: number;
+    nombre: string | null;
+    cantidad: number;
+}
+
+export interface ExhibicionComponentesAgrupados {
+    carcasas: ExhibicionComponenteItem[];
+    productos: ExhibicionComponenteItem[];
+}
+
+export interface ExhibicionFoto {
+    id: number;
+    url: string;
+    esFotoPrincipal: boolean;
+}
+
+export interface ExhibicionDetalle {
+    id: number;
+    nroExhibicion: string;
+    nombre: string;
+    clienteNombre: string;
+    sucursalNombre: string;
+    piso: string | null;
+    tipoNombre: string | null;
+    pisoDetalleNombre: string | null;
+    estadoId: 1 | 2;
+    fechaCrea: string;
+    canAprobar: boolean;
+    componentes: ExhibicionComponentesAgrupados;
+    fotos: ExhibicionFoto[];
+}
+
+export interface AprobarExhibicionResponse {
+    estadoId: 1 | 2;
+}
