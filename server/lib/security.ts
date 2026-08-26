@@ -16,7 +16,7 @@ export function cleanEnv(name: string): string {
 }
 
 export function safeError(err: unknown): string {
-    if (process.env.NODE_ENV !== 'production') {
+    if (cleanEnv('NODE_ENV') !== 'production') {
         if (err instanceof Error) return err.message;
         return String(err);
     }
@@ -32,7 +32,7 @@ export function sanitizeLog(val: unknown, maxLen = 200): string {
 export function getJwtSecret(): string {
     const secret = cleanEnv('JWT_SECRET');
     if (!secret) {
-        if (process.env.NODE_ENV === 'production') {
+        if (cleanEnv('NODE_ENV') === 'production') {
             throw new Error('JWT_SECRET no está configurado — no se puede arrancar en producción sin él.');
         }
         return 'fallback_development_secret_do_not_use';
