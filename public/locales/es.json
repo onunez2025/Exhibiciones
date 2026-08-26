@@ -79,5 +79,25 @@
         "pagina_de": "Página {{page}} de {{totalPages}}",
         "por_pagina": "Por página",
         "reintentar": "Recargar"
+    },
+    "exhibicion_detalle": {
+        "title": "Exhibición",
+        "tab_principal": "Principal",
+        "tab_componentes": "Componentes",
+        "tab_fotos": "Fotos",
+        "tab_carcasas": "Carcasas",
+        "tab_productos": "Productos",
+        "columna_cantidad": "Cantidad",
+        "campo_nombre": "Nombre de exhibición",
+        "campo_piso": "Piso",
+        "campo_detalle_ubicacion": "Detalle",
+        "accion_revisado": "Revisado",
+        "aprobado_ok": "Se aprobó correctamente.",
+        "error_aprobar": "No se pudo aprobar la exhibición.",
+        "error_cargar": "No se pudo cargar la exhibición.",
+        "volver_lista": "Volver a la lista",
+        "sin_fotos": "No hay fotos registradas para esta exhibición.",
+        "foto_principal": "Foto cuerpo entero",
+        "foto_componente": "Foto por componente"
     }
 }

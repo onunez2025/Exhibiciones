@@ -79,5 +79,25 @@
         "pagina_de": "Page {{page}} of {{totalPages}}",
         "por_pagina": "Per page",
         "reintentar": "Refresh"
+    },
+    "exhibicion_detalle": {
+        "title": "Exhibit",
+        "tab_principal": "Main",
+        "tab_componentes": "Components",
+        "tab_fotos": "Photos",
+        "tab_carcasas": "Frames",
+        "tab_productos": "Products",
+        "columna_cantidad": "Quantity",
+        "campo_nombre": "Exhibit name",
+        "campo_piso": "Floor",
+        "campo_detalle_ubicacion": "Detail",
+        "accion_revisado": "Reviewed",
+        "aprobado_ok": "Approved successfully.",
+        "error_aprobar": "Couldn't approve the exhibit.",
+        "error_cargar": "Couldn't load the exhibit.",
+        "volver_lista": "Back to list",
+        "sin_fotos": "No photos registered for this exhibit.",
+        "foto_principal": "Full body photo",
+        "foto_componente": "Photo by component"
     }
 }
