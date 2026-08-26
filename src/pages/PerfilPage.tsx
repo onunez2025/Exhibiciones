@@ -5,6 +5,7 @@ import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.js';
 import { apiClient } from '../services/apiClient.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
+import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 
 export function PerfilPage() {
     const { t } = useTranslation();
@@ -51,9 +52,12 @@ export function PerfilPage() {
     return (
         <div className={SIATC_THEME.LAYOUT.PAGE_WRAPPER}>
             <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
-                <div>
-                    <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('perfil.title')}</h1>
-                    <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('perfil.subtitle')}</p>
+                <div className="flex items-center gap-2">
+                    <MobileMenuButton />
+                    <div>
+                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('perfil.title')}</h1>
+                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('perfil.subtitle')}</p>
+                    </div>
                 </div>
             </div>
 

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Sidebar } from './Sidebar.js';
 import { cn } from '../../utils/cn.js';
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import type { LayoutOutletContext } from './MobileMenuButton.js';
 
 const EXPANDED_WIDTH = '280px';
 const COLLAPSED_WIDTH = '72px';
@@ -62,21 +63,20 @@ export const MainLayout: React.FC = () => {
                         <button type="button" onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 z-10 p-2 hover:bg-rose-500/10 hover:text-rose-500 rounded-2xl transition-colors duration-150 active:scale-90 cursor-pointer lg:hidden">
                             <X className="w-6 h-6" />
                         </button>
-                        <Sidebar className="flex-1" isExpanded={isExpanded} />
+                        <Sidebar className="flex-1" isExpanded={isExpanded} onNavigate={() => setSidebarOpen(false)} />
                     </div>
                 </div>
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative lg:pr-4 lg:pb-4">
-                <header className="h-16 lg:h-20 shrink-0 px-4 lg:px-8 flex items-center sticky top-0 z-40">
-                    <button type="button" onClick={() => setSidebarOpen(true)} className="p-3 -ml-3 text-muted-foreground hover:bg-white rounded-2xl lg:hidden shadow-sm transition-colors duration-150 active:scale-90 cursor-pointer">
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </header>
-
-                <main className="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar px-4 lg:px-8 pb-6">
+                {/* Sin barra fija propia — el botón de menú vive junto al
+                    título de cada página (ver MobileMenuButton), así en
+                    mobile quedan en la misma fila en vez de uno arriba del
+                    otro. openMobileMenu llega a las páginas vía el contexto
+                    del Outlet, no por una prop-drilling manual por cada ruta. */}
+                <main className="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar px-4 lg:px-8 pt-4 lg:pt-8 pb-6">
                     <div className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col min-h-0">
-                        <Outlet />
+                        <Outlet context={{ openMobileMenu: () => setSidebarOpen(true) } satisfies LayoutOutletContext} />
                     </div>
                 </main>
             </div>

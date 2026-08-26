@@ -13,12 +13,16 @@ const APP_DESC = 'Grupo Sole';
 export interface SidebarProps {
     className?: string;
     isExpanded: boolean;
+    // Se llama al hacer click en cualquier link de navegación — MainLayout
+    // lo usa para cerrar el drawer en mobile. En desktop es un no-op inocuo
+    // (sidebarOpen ya es false ahí, cerrarlo "de nuevo" no hace nada visible).
+    onNavigate?: () => void;
 }
 
 const ICON_ACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-300';
 const ICON_INACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-cb-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-300 cursor-pointer';
 
-export function Sidebar({ className, isExpanded }: SidebarProps) {
+export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
     const { user, logout } = useAuth();
     const { confirm } = useDialog();
     const location = useLocation();
@@ -80,13 +84,13 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                     const style = { '--enter-delay': `${i * 40}ms` } as CSSProperties;
                     if (!isExpanded) {
                         return (
-                            <NavLink key={item.path} to={item.path} title={item.name} viewTransition style={style} className={cn(isActive ? ICON_ACTIVE : ICON_INACTIVE, 'enter-fade-up')}>
+                            <NavLink key={item.path} to={item.path} title={item.name} viewTransition style={style} onClick={onNavigate} className={cn(isActive ? ICON_ACTIVE : ICON_INACTIVE, 'enter-fade-up')}>
                                 <Icon className="w-5 h-5 shrink-0" />
                             </NavLink>
                         );
                     }
                     return (
-                        <NavLink key={item.path} to={item.path} viewTransition style={style} className={cn(isActive ? SIATC_THEME.LAYOUT.SIDEBAR_ITEM_ACTIVE : SIATC_THEME.LAYOUT.SIDEBAR_ITEM_INACTIVE, 'enter-fade-up')}>
+                        <NavLink key={item.path} to={item.path} viewTransition style={style} onClick={onNavigate} className={cn(isActive ? SIATC_THEME.LAYOUT.SIDEBAR_ITEM_ACTIVE : SIATC_THEME.LAYOUT.SIDEBAR_ITEM_INACTIVE, 'enter-fade-up')}>
                             <div className="flex items-center gap-3 relative z-10">
                                 <Icon className="w-5 h-5 shrink-0" />
                                 <span className="tracking-tight">{item.name}</span>
@@ -101,6 +105,7 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                     <NavLink
                         to="/perfil"
                         viewTransition
+                        onClick={onNavigate}
                         className={cn(
                             'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors duration-200',
                             isProfileActive ? 'bg-primary/10' : 'hover:bg-muted'
@@ -119,6 +124,7 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                         to="/perfil"
                         title={user?.full_name || user?.username}
                         viewTransition
+                        onClick={onNavigate}
                         className={cn(
                             'flex items-center justify-center w-9 h-9 mx-auto rounded-xl bg-primary text-primary-foreground font-black text-xs shrink-0 transition-shadow duration-200',
                             isProfileActive && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-cb-bg'

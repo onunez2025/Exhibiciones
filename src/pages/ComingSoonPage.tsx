@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
+import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 
 export interface ComingSoonPageProps {
     titleKey: string;
@@ -16,9 +17,12 @@ export function ComingSoonPage({ titleKey, icon: Icon }: ComingSoonPageProps) {
     return (
         <div className={SIATC_THEME.LAYOUT.PAGE_WRAPPER}>
             <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
-                <div>
-                    <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t(titleKey)}</h1>
-                    <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('coming_soon.subtitle')}</p>
+                <div className="flex items-center gap-2">
+                    <MobileMenuButton />
+                    <div>
+                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t(titleKey)}</h1>
+                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('coming_soon.subtitle')}</p>
+                    </div>
                 </div>
             </div>
 

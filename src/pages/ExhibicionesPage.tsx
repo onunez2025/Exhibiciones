@@ -5,6 +5,7 @@ import { apiClient } from '../services/apiClient.js';
 import { useDialog } from '../context/DialogContext.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
+import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { ExhibicionCard } from '../components/exhibiciones/ExhibicionCard.js';
 import { FiltrosPanel } from '../components/exhibiciones/FiltrosPanel.js';
 import { Pagination } from '../components/exhibiciones/Pagination.js';
@@ -111,9 +112,12 @@ export function ExhibicionesPage() {
     return (
         <div className={SIATC_THEME.LAYOUT.PAGE_WRAPPER}>
             <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
-                <div>
-                    <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('exhibiciones_lista.title')}</h1>
-                    <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('exhibiciones_lista.subtitle')}</p>
+                <div className="flex items-center gap-2">
+                    <MobileMenuButton />
+                    <div>
+                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('exhibiciones_lista.title')}</h1>
+                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('exhibiciones_lista.subtitle')}</p>
+                    </div>
                 </div>
             </div>
 
