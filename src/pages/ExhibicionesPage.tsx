@@ -126,6 +126,11 @@ export function ExhibicionesPage() {
                     (bg-card, blancas, con su propia sombra) se separan del
                     fondo por contraste de tono, no solo por un borde de 1px. */}
                 <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-cb-bg">
+                    {/* En mobile: "Filtros" ocupa su propia fila; buscador +
+                        refrescar van juntos en la fila de abajo (están
+                        relacionados — refrescar es una acción sobre lo que
+                        se está buscando/filtrando, no un botón suelto). En
+                        sm+ las tres caben en una sola fila. */}
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
@@ -134,27 +139,29 @@ export function ExhibicionesPage() {
                         >
                             <Filter className="w-4 h-4" /> {t('exhibiciones_lista.filtros')}
                         </button>
-                        <div className="relative flex-1">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-cb-neutral">
-                                <Search className="w-4 h-4" />
+                        <div className="flex gap-3 flex-1">
+                            <div className="relative flex-1">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-cb-neutral">
+                                    <Search className="w-4 h-4" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    placeholder={t('exhibiciones_lista.search_placeholder')}
+                                    className="block w-full pl-10 pr-3 py-2.5 bg-card text-cb-text-primary border border-cb-border rounded-xl focus:ring-4 focus:ring-primary/12 focus:border-primary transition-[box-shadow,border-color] duration-200 ease-out outline-none text-sm"
+                                />
                             </div>
-                            <input
-                                type="text"
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                placeholder={t('exhibiciones_lista.search_placeholder')}
-                                className="block w-full pl-10 pr-3 py-2.5 bg-card text-cb-text-primary border border-cb-border rounded-xl focus:ring-4 focus:ring-primary/12 focus:border-primary transition-[box-shadow,border-color] duration-200 ease-out outline-none text-sm"
-                            />
+                            <button
+                                type="button"
+                                onClick={() => fetchPage(isDesktop ? page : 1, false)}
+                                disabled={loading}
+                                title={t('exhibiciones_lista.reintentar')}
+                                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-cb-border text-cb-text-secondary hover:text-primary hover:bg-primary/10 transition-colors duration-150 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <RefreshCw className={loading ? 'w-4 h-4 animate-spin' : 'w-4 h-4'} />
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => fetchPage(isDesktop ? page : 1, false)}
-                            disabled={loading}
-                            title={t('exhibiciones_lista.reintentar')}
-                            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-cb-border text-cb-text-secondary hover:text-primary hover:bg-primary/10 transition-colors duration-150 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            <RefreshCw className={loading ? 'w-4 h-4 animate-spin' : 'w-4 h-4'} />
-                        </button>
                     </div>
 
                     <FiltrosPanel
