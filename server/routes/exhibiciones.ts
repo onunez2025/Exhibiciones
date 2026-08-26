@@ -217,4 +217,45 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/:id/aprobar', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        // UPDATE con guardia de estado en el mismo WHERE (no lectura previa
+        // + escritura separada) — así dos aprobaciones concurrentes nunca
+        // pueden pisarse: solo una puede matchear IN_estado_id = 1.
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('usuario', sql.NVarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_EXHIBICION
+                SET IN_estado_id = 2, VC_usuario_modi = @usuario, DT_fecha_modi = GETDATE()
+                WHERE IN_exhibicion_id = @id AND IN_estado_id = 1
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            const existsResult = await pool.request()
+                .input('id', sql.BigInt, id)
+                .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+            if (existsResult.recordset.length === 0) {
+                res.status(404).json({ error: 'Exhibición no encontrada.' });
+            } else {
+                res.status(409).json({ error: 'La exhibición ya no está pendiente de revisión.' });
+            }
+            return;
+        }
+
+        res.json({ estadoId: 2 });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] aprobar error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 export default router;
