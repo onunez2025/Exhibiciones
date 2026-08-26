@@ -114,7 +114,7 @@ export function ExhibicionesPage() {
             </div>
 
             <div className={SIATC_THEME.LAYOUT.CONTENT_CONTAINER}>
-                <div className="p-4 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+                <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
@@ -184,8 +184,11 @@ export function ExhibicionesPage() {
                             )}
                         </div>
                     )}
+                </div>
 
-                    {isDesktop && total > 0 && (
+                {/* Paginación desktop: footer fijo fuera del scroll — siempre visible */}
+                {isDesktop && total > 0 && (
+                    <div className="px-4 pb-3 pt-1 border-t border-cb-border bg-card shrink-0">
                         <Pagination
                             page={page}
                             pageSize={pageSize}
@@ -193,8 +196,8 @@ export function ExhibicionesPage() {
                             onPageChange={(p) => fetchPage(p, false)}
                             onPageSizeChange={(size) => setPageSize(size)}
                         />
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );
