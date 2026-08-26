@@ -25,10 +25,12 @@ const FALLBACK_ESTADO_STYLE = { badge: 'bg-muted text-cb-text-secondary border-c
 
 function InfoField({ icon: Icon, label, value }: { icon: typeof Store; label: string; value: string }) {
     return (
-        <div className="flex items-center gap-1.5 min-w-0 max-w-full">
-            <Icon className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-            <span className="text-[10px] font-bold text-cb-text-secondary uppercase tracking-wide shrink-0">{label}</span>
-            <span className="text-xs text-cb-text-primary truncate">{value}</span>
+        <div className="flex items-start gap-1.5 min-w-0">
+            <Icon className="w-3.5 h-3.5 text-primary/70 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+                <p className="text-[9px] font-bold text-cb-text-secondary uppercase tracking-wide leading-tight">{label}</p>
+                <p className="text-xs text-cb-text-primary leading-tight break-words">{value}</p>
+            </div>
         </div>
     );
 }
@@ -74,27 +76,29 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
                 )}
             </div>
 
-            {/* Fila 2: campos de info (con ícono) + botones a la derecha */}
-            <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap mt-2 pl-9">
+            {/* Fila 2: campos de info — grilla propia, nunca comparte fila
+                con los botones (eso fue lo que se cortaba en mobile: un solo
+                flex-wrap con 4 campos + botones no alcanzaba a envolver bien
+                en pantallas angostas). */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5 mt-2 pl-9">
                 <InfoField icon={Store} label={t('exhibiciones_lista.campo_tienda')} value={exhibicion.clienteNombre} />
                 <InfoField icon={Store} label={t('exhibiciones_lista.campo_sucursal')} value={exhibicion.sucursalNombre} />
                 <InfoField icon={Tag} label={t('exhibiciones_lista.campo_tipo')} value={exhibicion.tipoNombre ?? '—'} />
                 <InfoField icon={MapPin} label={t('exhibiciones_lista.campo_ubicacion')} value={exhibicion.ubicacionNombre ?? '—'} />
+            </div>
 
-                {/* empuja botones a la derecha */}
-                <span className="flex-1 min-w-[8px]" />
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                    <button type="button" onClick={() => onAction('ver')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                        <Eye className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ver')}
-                    </button>
-                    <button type="button" onClick={() => onAction('checklist')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                        <ListChecks className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_checklist')}
-                    </button>
-                    <button type="button" onClick={() => onAction('ticket')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                        <Ticket className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ticket')}
-                    </button>
-                </div>
+            {/* Fila 3: botones — fila propia, con flex-wrap como red de
+                seguridad en pantallas muy angostas. */}
+            <div className="flex items-center gap-1.5 flex-wrap mt-2.5 pl-9">
+                <button type="button" onClick={() => onAction('ver')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
+                    <Eye className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ver')}
+                </button>
+                <button type="button" onClick={() => onAction('checklist')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
+                    <ListChecks className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_checklist')}
+                </button>
+                <button type="button" onClick={() => onAction('ticket')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
+                    <Ticket className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ticket')}
+                </button>
             </div>
         </div>
     );
