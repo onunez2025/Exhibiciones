@@ -86,7 +86,11 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
                     <ImageIcon className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-black text-primary shrink-0">{exhibicion.nroExhibicion}</span>
-                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-[60px]">{exhibicion.nombre}</span>
+                {/* min-w-0 (no un piso fijo) — en pantallas angostas
+                    ícono+nro+badge+menú ya casi llenan el ancho; si el
+                    nombre exige un mínimo, el botón de menú se empuja
+                    fuera de la tarjeta en vez de truncar el nombre. */}
+                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-0">{exhibicion.nombre}</span>
                 <span className={cn('shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', estadoStyle.badge)}>
                     {estadoLabel}
                 </span>
