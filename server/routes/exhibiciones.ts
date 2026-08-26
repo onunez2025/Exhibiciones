@@ -43,9 +43,29 @@ function bindParams(request: sql.Request, params: QueryParam[]): void {
     }
 }
 
+// req.query usa el parser "extendido" de Express — `?tipo=1&tipo=2` llega
+// como array, `?tienda[x]=1` como objeto anidado. buildExhibicionesFilter
+// espera strings; un `as ExhibicionesQueryParams` sin normalizar antes
+// dejaba pasar esos casos hasta un `.trim()` sobre un array/objeto, que
+// revienta con un 500 en vez de simplemente ignorar el param raro.
+function asString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+}
+
+function parseExhibicionesQuery(query: Request['query']): ExhibicionesQueryParams {
+    return {
+        search: asString(query.search),
+        tipo: asString(query.tipo),
+        estado: asString(query.estado),
+        tienda: asString(query.tienda),
+        fechaDesde: asString(query.fechaDesde),
+        fechaHasta: asString(query.fechaHasta),
+    };
+}
+
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const filter = buildExhibicionesFilter(req.query as ExhibicionesQueryParams);
+        const filter = buildExhibicionesFilter(parseExhibicionesQuery(req.query));
         const page = Math.max(1, Math.trunc(Number(req.query.page)) || 1);
         const pageSize = Math.min(100, Math.max(1, Math.trunc(Number(req.query.pageSize)) || 20));
         const offset = (page - 1) * pageSize;
@@ -73,7 +93,7 @@ router.get('/', async (req: Request, res: Response) => {
             LEFT JOIN dbo.PV_TABLA EPD
                 ON EPD.VC_tabla = 'EXHIBICION_PISO_DETALLE' AND EPD.CH_activo = '1' AND EPD.IN_id = E.IN_piso_detalle_id
             WHERE ${filter.whereSql}
-            ORDER BY E.VC_nro_exhibicion DESC
+            ORDER BY E.VC_nro_exhibicion DESC, E.IN_exhibicion_id DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
         `);
 

@@ -65,8 +65,12 @@ export function ExhibicionesPage() {
             setItems(prev => (append ? [...prev, ...data.items] : data.items));
         } catch (err) {
             if (seq !== requestSeq.current) return; // error obsoleto — se ignora también
-            const message = err instanceof Error ? err.message : t('exhibiciones_lista.error_cargar');
-            if (append) setLoadMoreError(true); else setError(message);
+            // Siempre el mensaje traducido — err.message trae texto crudo del
+            // servidor/red (p.ej. "Internal server error" en inglés, o el
+            // error real de SQL fuera de producción) y nunca debería llegar
+            // tal cual a la UI. El detalle real queda en consola para debug.
+            console.error('[Exhibiciones] fetch error:', err);
+            if (append) setLoadMoreError(true); else setError(t('exhibiciones_lista.error_cargar'));
         } finally {
             if (seq === requestSeq.current) {
                 if (append) setLoadingMore(false); else setLoading(false);
@@ -114,7 +118,10 @@ export function ExhibicionesPage() {
             </div>
 
             <div className={SIATC_THEME.LAYOUT.CONTENT_CONTAINER}>
-                <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                {/* Fondo gris real (no blanco-sobre-blanco) — así las tarjetas
+                    (bg-card, blancas, con su propia sombra) se separan del
+                    fondo por contraste de tono, no solo por un borde de 1px. */}
+                <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-cb-bg">
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
