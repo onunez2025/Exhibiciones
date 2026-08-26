@@ -16,7 +16,8 @@ import { fileURLToPath } from 'url';
 
 import authRouter from './routes/auth.js';
 import healthRouter from './routes/health.js';
-// TODO (sub-proyectos futuros): import tus routers de módulo aquí
+import exhibicionesRouter from './routes/exhibiciones.js';
+import { verifyToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,7 +116,7 @@ app.use(express.urlencoded({ limit: '2mb', extended: true }));
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
-// TODO (sub-proyectos futuros): app.use('/api/exhibiciones', verifyToken, exhibicionesRouter);
+app.use('/api/exhibiciones', verifyToken, exhibicionesRouter);
 
 // ─── Serve frontend in production ─────────────────────────────────────────────
 if (cleanEnv('NODE_ENV') === 'production') {
