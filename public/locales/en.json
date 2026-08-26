@@ -2,10 +2,16 @@
     "common": {
         "loading": "Loading...",
         "logout": "Log Out",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "save": "Save"
     },
     "nav": {
-        "dashboard": "Dashboard",
+        "dashboard": "Overview",
+        "exhibiciones": "Exhibits",
+        "checklist": "Checklist",
+        "tickets": "Tickets",
+        "informacion": "Information",
+        "perfil": "My Profile",
         "main_menu": "Main Menu",
         "change_language": "Change language",
         "current_language": "English"
@@ -26,5 +32,20 @@
         "title": "Dashboard",
         "welcome": "Welcome, {{name}}.",
         "subtitle": "Trade Marketing Exhibitions System — Grupo Sole"
+    },
+    "coming_soon": {
+        "subtitle": "This module is under construction.",
+        "message": "Not available yet — check back soon."
+    },
+    "perfil": {
+        "title": "My Profile",
+        "subtitle": "Your account and security details",
+        "change_password_title": "Change password",
+        "current_password": "Current password",
+        "new_password": "New password",
+        "confirm_password": "Confirm new password",
+        "mismatch_error": "The new passwords don't match",
+        "min_length_error": "The new password must be at least 6 characters",
+        "success": "Password updated successfully."
     }
 }

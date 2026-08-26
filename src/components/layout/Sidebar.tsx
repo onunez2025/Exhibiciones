@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { useDialog } from '../../context/DialogContext.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
-import { LayoutDashboard, LogOut, Globe } from 'lucide-react';
+import { LayoutDashboard, LogOut, Globe, Image, ListChecks, Ticket, Info } from 'lucide-react';
 
 const APP_NAME = 'Exhibiciones';
 const APP_DESC = 'Grupo Sole';
@@ -18,7 +18,7 @@ const ICON_ACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl
 const ICON_INACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-cb-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-300 cursor-pointer';
 
 export function Sidebar({ className, isExpanded }: SidebarProps) {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const { confirm } = useDialog();
     const location = useLocation();
     const { t, i18n } = useTranslation();
@@ -35,10 +35,17 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
         if (ok) logout();
     };
 
-    // TODO (sub-proyectos futuros): agrega los items de menú de cada módulo aquí
     const menuItems = [
         { path: '/dashboard', name: t('nav.dashboard'), icon: LayoutDashboard },
+        { path: '/exhibiciones', name: t('nav.exhibiciones'), icon: Image },
+        { path: '/checklist', name: t('nav.checklist'), icon: ListChecks },
+        { path: '/tickets', name: t('nav.tickets'), icon: Ticket },
+        { path: '/informacion', name: t('nav.informacion'), icon: Info },
+        // TODO (sub-proyectos futuros): agrega los items de menú de cada módulo real aquí
     ];
+
+    const userInitial = (user?.full_name || user?.username || '?').trim().charAt(0).toUpperCase();
+    const isProfileActive = location.pathname === '/perfil';
 
     return (
         <div className={cn(SIATC_THEME.LAYOUT.SIDEBAR_INNER, className)}>
@@ -84,6 +91,37 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                     );
                 })}
             </nav>
+
+            <div className={cn('border-t border-border/50 shrink-0 transition-all duration-300', isExpanded ? 'p-3' : 'p-2 flex justify-center')}>
+                {isExpanded ? (
+                    <NavLink
+                        to="/perfil"
+                        className={cn(
+                            'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300',
+                            isProfileActive ? 'bg-primary/10' : 'hover:bg-muted'
+                        )}
+                    >
+                        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 text-primary-foreground font-black text-sm">
+                            {userInitial}
+                        </div>
+                        <div className="min-w-0 text-left">
+                            <p className="text-xs font-bold text-cb-text-primary truncate">{user?.full_name || user?.username}</p>
+                            <p className="text-[10px] text-cb-text-secondary truncate">{user?.role_name}</p>
+                        </div>
+                    </NavLink>
+                ) : (
+                    <NavLink
+                        to="/perfil"
+                        title={user?.full_name || user?.username}
+                        className={cn(
+                            'flex items-center justify-center w-9 h-9 mx-auto rounded-xl bg-primary text-primary-foreground font-black text-xs shrink-0 transition-all duration-300',
+                            isProfileActive && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-cb-bg'
+                        )}
+                    >
+                        {userInitial}
+                    </NavLink>
+                )}
+            </div>
 
             <div className={cn('border-t border-border/50 bg-muted/20 shrink-0 transition-all duration-300', isExpanded ? 'p-4 space-y-2' : 'p-2 flex flex-col items-center gap-2')}>
                 {isExpanded ? (

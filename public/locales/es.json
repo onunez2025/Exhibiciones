@@ -2,10 +2,16 @@
     "common": {
         "loading": "Cargando...",
         "logout": "Cerrar Sesión",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "save": "Guardar"
     },
     "nav": {
-        "dashboard": "Dashboard",
+        "dashboard": "Resumen",
+        "exhibiciones": "Exhibiciones",
+        "checklist": "Checklist",
+        "tickets": "Tickets",
+        "informacion": "Información",
+        "perfil": "Mi Perfil",
         "main_menu": "Menú Principal",
         "change_language": "Cambiar idioma",
         "current_language": "Español"
@@ -26,5 +32,20 @@
         "title": "Dashboard",
         "welcome": "Bienvenido, {{name}}.",
         "subtitle": "Sistema de Exhibiciones Trade Marketing — Grupo Sole"
+    },
+    "coming_soon": {
+        "subtitle": "Este módulo está en construcción.",
+        "message": "Todavía no está disponible — vuelve pronto."
+    },
+    "perfil": {
+        "title": "Mi Perfil",
+        "subtitle": "Datos de tu cuenta y seguridad",
+        "change_password_title": "Cambiar contraseña",
+        "current_password": "Contraseña actual",
+        "new_password": "Nueva contraseña",
+        "confirm_password": "Confirmar nueva contraseña",
+        "mismatch_error": "Las contraseñas nuevas no coinciden",
+        "min_length_error": "La nueva contraseña debe tener al menos 6 caracteres",
+        "success": "Contraseña actualizada exitosamente."
     }
 }
