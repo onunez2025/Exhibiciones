@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storageService.js';
 import { apiClient } from '../services/apiClient.js';
 import { resolvePermission } from '../utils/permissions.js';
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const navigate = useNavigate();
 
     const clearInactivityTimer = useCallback(() => {
         if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
@@ -32,9 +35,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await apiClient.post('/auth/logout');
         } catch { /* best-effort — el token se borra igual del lado cliente */ }
         StorageService.clear();
-        setUser(null);
-        window.location.href = '/login';
-    }, [clearInactivityTimer]);
+
+        // Navegación SPA (no window.location.href) para poder animar la
+        // salida — un reload completo no deja nada que hacer un cross-fade.
+        // startViewTransition necesita el cambio de DOM SÍNCRONO dentro de
+        // su callback; flushSync fuerza el re-render de React antes de que
+        // la API capture el snapshot "nuevo". Sin soporte (Firefox/Safari
+        // viejos), cae a navegación normal sin transición — nunca se rompe.
+        const applyLogout = () => {
+            setUser(null);
+            navigate('/login', { replace: true });
+        };
+        if (typeof document.startViewTransition === 'function') {
+            document.documentElement.classList.add('vt-logout');
+            const transition = document.startViewTransition(() => flushSync(applyLogout));
+            transition.finished.finally(() => document.documentElement.classList.remove('vt-logout'));
+        } else {
+            applyLogout();
+        }
+    }, [clearInactivityTimer, navigate]);
 
     const resetInactivityTimer = useCallback(() => {
         clearInactivityTimer();

@@ -33,6 +33,14 @@
     --shadow-cb-level-3: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
 }
 
+:root {
+    /* Curvas de easing "fuertes" — las de CSS por defecto se sienten débiles.
+       out: entradas (arranca rápido, se siente inmediato). in-out: elementos
+       que se mueven en pantalla. Ver skill apple-design / emil-design-eng. */
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-family: var(--font-sans); background-color: var(--color-background); color: var(--color-foreground); }
 
@@ -40,3 +48,60 @@ body { margin: 0; font-family: var(--font-sans); background-color: var(--color-b
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-cb-border); border-radius: 3px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-cb-neutral); }
+
+/* ─── Entradas en cascada (bienvenida, listas) ──────────────────────────── */
+@keyframes fade-slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.enter-fade-up {
+    opacity: 0;
+    animation: fade-slide-up 500ms var(--ease-out-strong) forwards;
+    animation-delay: var(--enter-delay, 0ms);
+}
+
+/* ─── Modales / diálogos ─────────────────────────────────────────────────── */
+@keyframes modal-overlay-in { from { opacity: 0; } }
+@keyframes modal-content-in { from { opacity: 0; transform: scale(0.95) translateY(4px); } }
+.modal-overlay-in { animation: modal-overlay-in 200ms ease-out forwards; }
+.modal-content-in { animation: modal-content-in 220ms var(--ease-out-strong) forwards; }
+
+/* Ícono que "aparece" (éxito, confirmaciones) — nunca desde scale(0),
+   nada en el mundo real aparece de la nada (skill emil-design-eng). */
+@keyframes pop-in {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: scale(1); }
+}
+.pop-in { animation: pop-in 220ms var(--ease-out-strong) forwards; }
+
+/* ─── Transiciones de vista (View Transitions API) ──────────────────────── */
+::view-transition-old(root) { animation: view-fade-out 180ms var(--ease-in-out-strong) forwards; }
+::view-transition-new(root) { animation: view-fade-in 220ms var(--ease-out-strong) 60ms backwards; }
+@keyframes view-fade-out { to { opacity: 0; } }
+@keyframes view-fade-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* Cerrar sesión pesa distinto a navegar entre vistas — más lento y con un
+   leve blur+achique, no un simple corte (skill emil-design-eng: "usa blur
+   para enmascarar transiciones imperfectas"). document.documentElement
+   recibe la clase .vt-logout justo antes de iniciar esta transición. */
+:root.vt-logout::view-transition-old(root) {
+    animation: view-logout-out 380ms var(--ease-in-out-strong) forwards;
+}
+:root.vt-logout::view-transition-new(root) {
+    animation: view-fade-in 320ms var(--ease-out-strong) 140ms backwards;
+}
+@keyframes view-logout-out {
+    to { opacity: 0; transform: scale(0.97); filter: blur(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .enter-fade-up {
+        animation-duration: 200ms;
+        animation-name: fade-only;
+        animation-delay: 0ms !important;
+    }
+    @keyframes fade-only { from { opacity: 0; } to { opacity: 1; } }
+    .pop-in { animation-name: fade-only; animation-duration: 150ms; }
+    .modal-content-in { animation-name: fade-only; animation-duration: 150ms; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}

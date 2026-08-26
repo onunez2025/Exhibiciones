@@ -39,27 +39,27 @@ export const MainLayout: React.FC = () => {
     return (
         <div className="h-screen bg-[#F8FAFC] text-foreground flex overflow-hidden">
             <div
-                className={cn('fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md lg:hidden transition-all duration-500', sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none')}
+                className={cn('fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md lg:hidden transition-opacity duration-300 ease-out', sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none')}
                 onClick={() => setSidebarOpen(false)}
             />
 
-            <div className="hidden lg:block shrink-0 transition-[width] duration-300 ease-in-out" style={{ width: spacerWidth }} />
+            <div className="hidden lg:block shrink-0 transition-[width] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]" style={{ width: spacerWidth }} />
 
             <aside
-                className={cn('fixed inset-y-0 left-0 z-[70] transition-[transform,width] duration-300 ease-in-out', sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}
+                className={cn('fixed inset-y-0 left-0 z-[70] transition-[transform,width] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]', sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}
                 style={{ width: isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH }}
             >
                 <button
                     type="button"
                     onClick={handleToggle}
-                    className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full z-20 h-10 w-5 rounded-r-xl bg-white/90 backdrop-blur-sm border border-l-0 border-border/40 shadow-[2px_0_8px_rgba(0,0,0,0.08)] items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer"
+                    className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full z-20 h-10 w-5 rounded-r-xl bg-white/90 backdrop-blur-sm border border-l-0 border-border/40 shadow-[2px_0_8px_rgba(0,0,0,0.08)] items-center justify-center text-muted-foreground hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer"
                 >
                     {isExpanded ? '‹' : '›'}
                 </button>
 
                 <div className="h-full p-4">
                     <div className="h-full flex flex-col overflow-hidden relative border border-white shadow-2xl rounded-[2.5rem] bg-cb-bg">
-                        <button type="button" onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 z-10 p-2 hover:bg-rose-500/10 hover:text-rose-500 rounded-2xl transition-all cursor-pointer lg:hidden">
+                        <button type="button" onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 z-10 p-2 hover:bg-rose-500/10 hover:text-rose-500 rounded-2xl transition-colors duration-150 active:scale-90 cursor-pointer lg:hidden">
                             <X className="w-6 h-6" />
                         </button>
                         <Sidebar className="flex-1" isExpanded={isExpanded} />
@@ -69,7 +69,7 @@ export const MainLayout: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative lg:pr-4 lg:pb-4">
                 <header className="h-16 lg:h-20 shrink-0 px-4 lg:px-8 flex items-center sticky top-0 z-40">
-                    <button type="button" onClick={() => setSidebarOpen(true)} className="p-3 -ml-3 text-muted-foreground hover:bg-white rounded-2xl lg:hidden shadow-sm transition-all cursor-pointer">
+                    <button type="button" onClick={() => setSidebarOpen(true)} className="p-3 -ml-3 text-muted-foreground hover:bg-white rounded-2xl lg:hidden shadow-sm transition-colors duration-150 active:scale-90 cursor-pointer">
                         <Menu className="w-6 h-6" />
                     </button>
                 </header>

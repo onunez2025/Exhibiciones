@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth.js';
@@ -71,18 +72,21 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                         {t('nav.main_menu')}
                     </p>
                 )}
-                {menuItems.map((item) => {
+                {menuItems.map((item, i) => {
                     const isActive = location.pathname === item.path;
                     const Icon = item.icon;
+                    // Stagger de entrada — solo se ve una vez, al montar el
+                    // sidebar (no en cada navegación, no en cada click).
+                    const style = { '--enter-delay': `${i * 40}ms` } as CSSProperties;
                     if (!isExpanded) {
                         return (
-                            <NavLink key={item.path} to={item.path} title={item.name} className={isActive ? ICON_ACTIVE : ICON_INACTIVE}>
+                            <NavLink key={item.path} to={item.path} title={item.name} viewTransition style={style} className={cn(isActive ? ICON_ACTIVE : ICON_INACTIVE, 'enter-fade-up')}>
                                 <Icon className="w-5 h-5 shrink-0" />
                             </NavLink>
                         );
                     }
                     return (
-                        <NavLink key={item.path} to={item.path} className={isActive ? SIATC_THEME.LAYOUT.SIDEBAR_ITEM_ACTIVE : SIATC_THEME.LAYOUT.SIDEBAR_ITEM_INACTIVE}>
+                        <NavLink key={item.path} to={item.path} viewTransition style={style} className={cn(isActive ? SIATC_THEME.LAYOUT.SIDEBAR_ITEM_ACTIVE : SIATC_THEME.LAYOUT.SIDEBAR_ITEM_INACTIVE, 'enter-fade-up')}>
                             <div className="flex items-center gap-3 relative z-10">
                                 <Icon className="w-5 h-5 shrink-0" />
                                 <span className="tracking-tight">{item.name}</span>
@@ -96,8 +100,9 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                 {isExpanded ? (
                     <NavLink
                         to="/perfil"
+                        viewTransition
                         className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300',
+                            'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors duration-200',
                             isProfileActive ? 'bg-primary/10' : 'hover:bg-muted'
                         )}
                     >
@@ -113,8 +118,9 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                     <NavLink
                         to="/perfil"
                         title={user?.full_name || user?.username}
+                        viewTransition
                         className={cn(
-                            'flex items-center justify-center w-9 h-9 mx-auto rounded-xl bg-primary text-primary-foreground font-black text-xs shrink-0 transition-all duration-300',
+                            'flex items-center justify-center w-9 h-9 mx-auto rounded-xl bg-primary text-primary-foreground font-black text-xs shrink-0 transition-shadow duration-200',
                             isProfileActive && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-cb-bg'
                         )}
                     >
@@ -126,21 +132,21 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
             <div className={cn('border-t border-border/50 bg-muted/20 shrink-0 transition-all duration-300', isExpanded ? 'p-4 space-y-2' : 'p-2 flex flex-col items-center gap-2')}>
                 {isExpanded ? (
                     <>
-                        <button type="button" onClick={toggleLanguage} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-white rounded-2xl transition-all cursor-pointer">
+                        <button type="button" onClick={toggleLanguage} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-white rounded-2xl transition-[color,background-color] duration-150 active:scale-[0.97] cursor-pointer">
                             <Globe className="w-4 h-4 text-primary" />
                             <span className="uppercase tracking-widest">{t('nav.current_language')}</span>
                         </button>
-                        <button type="button" onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-[0.2em] cursor-pointer">
+                        <button type="button" onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-[background-color] duration-150 active:scale-[0.97] uppercase tracking-[0.2em] cursor-pointer">
                             <LogOut className="w-4 h-4" />
                             {t('common.logout')}
                         </button>
                     </>
                 ) : (
                     <>
-                        <button type="button" onClick={toggleLanguage} title={t('nav.change_language')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer">
+                        <button type="button" onClick={toggleLanguage} title={t('nav.change_language')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-[color,background-color] duration-150 active:scale-[0.97] cursor-pointer">
                             <Globe className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={handleLogout} title={t('common.logout')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-rose-500 hover:bg-rose-50 transition-all cursor-pointer">
+                        <button type="button" onClick={handleLogout} title={t('common.logout')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-rose-500 hover:bg-rose-50 transition-[background-color] duration-150 active:scale-[0.97] cursor-pointer">
                             <LogOut className="w-4 h-4" />
                         </button>
                     </>

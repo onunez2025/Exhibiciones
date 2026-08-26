@@ -13,9 +13,13 @@ import { Image, ListChecks, Ticket, Info } from 'lucide-react';
 export default function App() {
     return (
         <ErrorBoundary>
-            <AuthProvider>
-                <DialogProvider>
-                    <BrowserRouter>
+            {/* BrowserRouter envuelve a AuthProvider (y no al revés) para que
+                login()/logout() puedan navegar vía SPA (useNavigate) en vez
+                de recargar la página entera — eso es lo que hace posible
+                animar la transición de salida al cerrar sesión. */}
+            <BrowserRouter>
+                <AuthProvider>
+                    <DialogProvider>
                         <Routes>
                             <Route path="/login" element={<LoginPage />} />
                             <Route element={<MainLayout />}>
@@ -30,9 +34,9 @@ export default function App() {
                             </Route>
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
-                    </BrowserRouter>
-                </DialogProvider>
-            </AuthProvider>
+                    </DialogProvider>
+                </AuthProvider>
+            </BrowserRouter>
         </ErrorBoundary>
     );
 }

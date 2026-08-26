@@ -39,8 +39,8 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
         <DialogContext.Provider value={{ confirm, alert }}>
             {children}
             {dialog && (
-                <div className={cn('fixed inset-0 z-[150] flex items-center justify-center p-4', SIATC_THEME.TOKENS.MODAL_OVERLAY)}>
-                    <div className={SIATC_THEME.COMPONENTS.MODAL_CONTENT + ' w-full max-w-sm'}>
+                <div className={cn('fixed inset-0 z-[150] flex items-center justify-center p-4 modal-overlay-in', SIATC_THEME.TOKENS.MODAL_OVERLAY)}>
+                    <div className={SIATC_THEME.COMPONENTS.MODAL_CONTENT + ' w-full max-w-sm modal-content-in'}>
                         <div className="px-6 py-5 border-b border-cb-border">
                             <h3 className="text-sm font-black uppercase tracking-wider">{dialog.title}</h3>
                         </div>
