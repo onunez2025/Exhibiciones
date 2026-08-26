@@ -144,13 +144,13 @@ export function PerfilPage() {
                             </div>
 
                             {error && (
-                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-semibold">
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-sm font-semibold">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     {error}
                                 </div>
                             )}
                             {success && (
-                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm font-semibold">
                                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                                     {t('perfil.success')}
                                 </div>

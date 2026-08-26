@@ -126,11 +126,11 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
             <div className={cn('border-t border-border/50 bg-muted/20 shrink-0 transition-all duration-300', isExpanded ? 'p-4 space-y-2' : 'p-2 flex flex-col items-center gap-2')}>
                 {isExpanded ? (
                     <>
-                        <button type="button" onClick={toggleLanguage} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-white/5 rounded-2xl transition-all cursor-pointer">
+                        <button type="button" onClick={toggleLanguage} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-white rounded-2xl transition-all cursor-pointer">
                             <Globe className="w-4 h-4 text-primary" />
                             <span className="uppercase tracking-widest">{t('nav.current_language')}</span>
                         </button>
-                        <button type="button" onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-2xl transition-all uppercase tracking-[0.2em] cursor-pointer">
+                        <button type="button" onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all uppercase tracking-[0.2em] cursor-pointer">
                             <LogOut className="w-4 h-4" />
                             {t('common.logout')}
                         </button>
@@ -140,7 +140,7 @@ export function Sidebar({ className, isExpanded }: SidebarProps) {
                         <button type="button" onClick={toggleLanguage} title={t('nav.change_language')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer">
                             <Globe className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={handleLogout} title={t('common.logout')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer">
+                        <button type="button" onClick={handleLogout} title={t('common.logout')} className="flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-rose-500 hover:bg-rose-50 transition-all cursor-pointer">
                             <LogOut className="w-4 h-4" />
                         </button>
                     </>

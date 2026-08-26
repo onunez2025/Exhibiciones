@@ -48,6 +48,6 @@ export const SIATC_THEME = {
 
     LOGIN_LAYOUT: {
         LEFT_PANEL: "hidden md:flex flex-col justify-between w-1/2 bg-primary text-white p-12 relative overflow-hidden",
-        RIGHT_PANEL: "flex-1 flex flex-col justify-center items-center p-8 bg-[#F7F8FA] dark:bg-[#050B14] relative",
+        RIGHT_PANEL: "flex-1 flex flex-col justify-center items-center p-8 bg-[#F7F8FA] relative",
     },
 };

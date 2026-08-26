@@ -20,7 +20,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
     render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center p-8 bg-[#F9FAFB] dark:bg-[#050F1A]">
+                <div className="min-h-screen flex items-center justify-center p-8 bg-[#F9FAFB]">
                     <div className={SIATC_THEME.COMPONENTS.MODAL_CONTENT + ' max-w-md w-full p-8 text-center space-y-4'}>
                         <p className="text-4xl">⚠️</p>
                         <h2 className={SIATC_THEME.TOKENS.TYPOGRAPHY.H1}>Algo salió mal</h2>

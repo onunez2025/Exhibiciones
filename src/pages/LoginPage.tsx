@@ -93,7 +93,7 @@ export function LoginPage() {
             </div>
 
             {error && (
-                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-semibold">
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-sm font-semibold">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     {error}
                 </div>
@@ -110,7 +110,7 @@ export function LoginPage() {
     );
 
     return (
-        <div className="min-h-dvh flex flex-col md:flex-row bg-[#F7F8FA] dark:bg-[#050B14]">
+        <div className="min-h-dvh flex flex-col md:flex-row bg-[#F7F8FA]">
             {/* ═══ MOBILE (<768px) ═══ */}
             <div className="flex flex-col md:hidden min-h-dvh w-full">
                 <div className="relative bg-primary overflow-hidden shrink-0 pb-12 pt-10 min-h-[38dvh]">
@@ -123,7 +123,7 @@ export function LoginPage() {
                         <p className="text-white/75 text-sm mt-1.5 max-w-[240px]">{t('auth.subtitle')}</p>
                     </div>
                     <svg className="absolute bottom-0 left-0 w-full h-12" viewBox="0 0 375 48" preserveAspectRatio="none">
-                        <path d="M0,24 C90,52 285,-4 375,20 L375,48 L0,48 Z" fill="currentColor" className="text-[#F7F8FA] dark:text-[#050B14]" />
+                        <path d="M0,24 C90,52 285,-4 375,20 L375,48 L0,48 Z" fill="currentColor" className="text-[#F7F8FA]" />
                     </svg>
                 </div>
                 <div className="flex-1 flex flex-col justify-center px-6 py-8">
@@ -153,13 +153,13 @@ export function LoginPage() {
                         © {new Date().getFullYear()} Grupo Sole Rinnai Corporation. Todos los derechos reservados.
                     </div>
                 </div>
-                <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 bg-[#F7F8FA] dark:bg-[#050B14] relative">
+                <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 bg-[#F7F8FA] relative">
                     <div className="w-full max-w-[380px] space-y-8">
                         <div className="text-center md:text-left">
                             <h2 className="text-2xl font-bold tracking-tight text-cb-text-primary">{t('auth.title')}</h2>
                             <p className="mt-1.5 text-sm text-cb-text-secondary">{t('auth.subtitle')}</p>
                         </div>
-                        <div className="bg-card border border-cb-border rounded-2xl shadow-xl shadow-slate-200/40 dark:shadow-none p-8">
+                        <div className="bg-card border border-cb-border rounded-2xl shadow-xl shadow-slate-200/40 p-8">
                             {renderForm()}
                         </div>
                     </div>
