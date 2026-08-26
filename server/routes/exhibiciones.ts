@@ -2,10 +2,12 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { getDbConnection } from '../db.js';
-import { safeError } from '../lib/security.js';
+import { safeError, cleanEnv } from '../lib/security.js';
 import sql from 'mssql';
 import { buildExhibicionesFilter } from '../lib/exhibicionesFilter.js';
 import type { ExhibicionesQueryParams, QueryParam } from '../lib/exhibicionesFilter.js';
+import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
+import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 
 const router = Router();
 
@@ -113,6 +115,104 @@ router.get('/', async (req: Request, res: Response) => {
         });
     } catch (err: unknown) {
         console.error('[Exhibiciones] list error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.get('/:id', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        // Sin filtro de estado acá a propósito — a diferencia de la lista
+        // (que oculta estado 0/Anulado), el detalle es una vista de solo
+        // lectura por id: no tiene sentido devolver 404 para un registro que
+        // sí existe solo porque está anulado.
+        const principalResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .query(`
+                SELECT
+                    E.IN_exhibicion_id as id,
+                    E.VC_nro_exhibicion as nroExhibicion,
+                    E.VC_nombre as nombre,
+                    E.VC_cliente_nombre as clienteNombre,
+                    E.VC_sucursal_nombre as sucursalNombre,
+                    E.VC_piso as piso,
+                    ET.VC_descripcion as tipoNombre,
+                    EPD.VC_descripcion as pisoDetalleNombre,
+                    E.IN_estado_id as estadoId,
+                    E.DT_fecha_crea as fechaCrea
+                FROM EXHIBICION.TB_EXHIBICION E
+                LEFT JOIN dbo.PV_TABLA ET
+                    ON ET.VC_tabla = 'EXHIBICION_TIPO' AND ET.CH_activo = '1' AND ET.IN_id = E.IN_exhibicion_tipo_id
+                LEFT JOIN dbo.PV_TABLA EPD
+                    ON EPD.VC_tabla = 'EXHIBICION_PISO_DETALLE' AND EPD.CH_activo = '1' AND EPD.IN_id = E.IN_piso_detalle_id
+                WHERE E.IN_exhibicion_id = @id
+            `);
+
+        const principalRow = principalResult.recordset[0];
+        if (!principalRow) {
+            res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+
+        const componentesResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .query(`
+                SELECT
+                    C.IN_exhibicion_componente_id as id,
+                    C.IN_tipo as tipo,
+                    P.VC_articulo_nombre2 as nombre,
+                    C.IN_cantidad as cantidad
+                FROM EXHIBICION.TB_EXHIBICION_COMPONENTE C
+                LEFT JOIN EXHIBICION.WEB_MARKETING_PRODUCTOS P
+                    ON P.VC_articulo_codigo = C.VC_codigo_producto
+                    AND P.VC_tipo = CASE C.IN_tipo WHEN 1 THEN 'PRD' WHEN 2 THEN 'CAR' END
+                WHERE C.IN_exhibicion_id = @id AND C.IN_estado = 1
+                ORDER BY nombre
+            `);
+
+        const fotosResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .query(`
+                SELECT
+                    IN_exhibicion_foto_id as id,
+                    VC_archivo_nombre as archivoNombre,
+                    BI_es_foto_principal as esFotoPrincipal
+                FROM EXHIBICION.TB_EXHIBICION_FOTO
+                WHERE IN_exhibicion_id = @id AND IN_estado > 0
+                ORDER BY BI_es_foto_principal DESC, IN_exhibicion_foto_id ASC
+            `);
+
+        const blobContainerUrl = cleanEnv('BLOB_CONTAINER_URL');
+        const blobSasToken = cleanEnv('BLOB_SAS_TOKEN');
+
+        res.json({
+            id: principalRow.id,
+            nroExhibicion: principalRow.nroExhibicion,
+            nombre: principalRow.nombre,
+            clienteNombre: principalRow.clienteNombre,
+            sucursalNombre: principalRow.sucursalNombre,
+            piso: principalRow.piso,
+            tipoNombre: principalRow.tipoNombre,
+            pisoDetalleNombre: principalRow.pisoDetalleNombre,
+            estadoId: principalRow.estadoId,
+            fechaCrea: principalRow.fechaCrea,
+            canAprobar: principalRow.estadoId === 1,
+            componentes: mapComponentesRows(componentesResult.recordset),
+            fotos: fotosResult.recordset.map((f: { id: number; archivoNombre: string; esFotoPrincipal: boolean }) => ({
+                id: f.id,
+                url: buildFotoUrl(blobContainerUrl, blobSasToken, f.archivoNombre),
+                esFotoPrincipal: f.esFotoPrincipal,
+            })),
+        });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] detalle error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
