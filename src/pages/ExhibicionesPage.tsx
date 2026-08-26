@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, RefreshCw, Loader2 } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useDialog } from '../context/DialogContext.js';
@@ -16,6 +17,7 @@ const DEFAULT_PAGE_SIZE = 20;
 export function ExhibicionesPage() {
     const { t } = useTranslation();
     const { alert } = useDialog();
+    const navigate = useNavigate();
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
     const [searchInput, setSearchInput] = useState('');
@@ -104,8 +106,11 @@ export function ExhibicionesPage() {
         return () => observer.disconnect();
     }, [isDesktop, items.length, total, loadingMore, loadMoreError, page, fetchPage]);
 
-    const handleAction = (action: 'ver' | 'checklist' | 'ticket') => {
-        void action;
+    const handleAction = (action: 'ver' | 'checklist' | 'ticket', id: number) => {
+        if (action === 'ver') {
+            navigate(`/exhibiciones/${id}`, { viewTransition: true });
+            return;
+        }
         alert(t('exhibiciones_lista.proximamente_titulo'), t('exhibiciones_lista.proximamente_mensaje'));
     };
 
@@ -183,7 +188,7 @@ export function ExhibicionesPage() {
 
                     <div className="space-y-3">
                         {items.map(item => (
-                            <ExhibicionCard key={item.id} exhibicion={item} onAction={handleAction} />
+                            <ExhibicionCard key={item.id} exhibicion={item} onAction={(action) => handleAction(action, item.id)} />
                         ))}
                     </div>
 
