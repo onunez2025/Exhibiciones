@@ -7,14 +7,10 @@ import jwt from 'jsonwebtoken';
 import sql from 'mssql';
 import { z } from 'zod';
 import { verifyToken } from '../middleware/auth.js';
-import { cleanEnv } from '../lib/security.js';
+import { getJwtSecret } from '../lib/security.js';
+import { blacklistToken } from '../lib/redis.js';
 
 const router = Router();
-
-// Leído en cada llamada, no al cargar el módulo — ver nota en server/db.ts.
-function getJwtSecret(): string {
-    return cleanEnv('JWT_SECRET') || 'fallback_development_secret_do_not_use';
-}
 
 const loginSchema = z.object({
     username: z.string().min(1).max(100),
@@ -173,6 +169,15 @@ router.post('/change-password', verifyToken, async (req: Request, res: Response)
         console.error('Change password error:', err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
+});
+
+router.post('/logout', verifyToken, async (req: Request, res: Response) => {
+    const token = (req.headers['authorization'] || '').split(' ')[1];
+    const exp = req.user?.exp;
+    if (token && exp) {
+        await blacklistToken(token, exp);
+    }
+    res.json({ message: 'Sesión cerrada correctamente.' });
 });
 
 export default router;

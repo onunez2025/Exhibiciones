@@ -4,15 +4,8 @@ import jwt from 'jsonwebtoken';
 import { isTokenBlacklisted } from '../lib/redis.js';
 import { getDbConnection } from '../db.js';
 import sql from 'mssql';
-import { sanitizeLog, cleanEnv } from '../lib/security.js';
+import { sanitizeLog, getJwtSecret } from '../lib/security.js';
 import { resolvePermission } from '../lib/permissions.js';
-
-// Leído en cada llamada, no al cargar el módulo — mismo motivo que db.ts:
-// el hoisting de imports en ESM hace que este módulo se evalúe antes que
-// dotenv.config() en desarrollo local.
-function getJwtSecret(): string {
-    return cleanEnv('JWT_SECRET') || 'fallback_development_secret_do_not_use';
-}
 
 declare global {
     namespace Express {

@@ -10,6 +10,7 @@ import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import { getRedisClient, isRedisAvailable, recordRedisFailure } from './lib/redis.js';
 import { resolveCorsAllow } from './lib/cors.js';
+import { cleanEnv } from './lib/security.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,7 +22,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = cleanEnv('PORT') || 3000;
+
+let lastDegradedLogAt = 0;
+const DEGRADED_LOG_INTERVAL_MS = 15_000; // mismo orden que el cooldown del circuit-breaker
+
+function logDegradedOnce(label: string): void {
+    const now = Date.now();
+    if (now - lastDegradedLogAt > DEGRADED_LOG_INTERVAL_MS) {
+        lastDegradedLogAt = now;
+        console.error(`[RateLimit:${label}] degradado (Redis no disponible) — este mensaje se silencia por ${DEGRADED_LOG_INTERVAL_MS / 1000}s`);
+    }
+}
 
 app.set('trust proxy', 1);
 
@@ -42,7 +54,7 @@ app.use(helmet({
             baseUri: ["'self'"],
         },
     },
-    hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
+    hsts: cleanEnv('NODE_ENV') === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
 }));
 
 // ─── Rate limiting (Redis-backed, circuit-breaker gated) ──────────────────────
@@ -74,7 +86,7 @@ function tolerant(mw: RequestHandler, label: string): RequestHandler {
     return (req: Request, res: Response, next: NextFunction) => {
         mw(req, res, (err?: unknown) => {
             if (err) {
-                console.error(`[RateLimit:${label}] degradado (Redis no disponible)`);
+                logDegradedOnce(label);
                 return next();
             }
             next();
@@ -90,8 +102,8 @@ app.use(cors((req, callback) => {
     const allow = resolveCorsAllow({
         origin: req.headers.origin,
         host: req.headers.host,
-        nodeEnv: process.env.NODE_ENV,
-        allowedOrigins: process.env.ALLOWED_ORIGINS || '',
+        nodeEnv: cleanEnv('NODE_ENV'),
+        allowedOrigins: cleanEnv('ALLOWED_ORIGINS'),
     });
     if (!allow) console.error(`Blocked CORS from: ${req.headers.origin}`);
     callback(null, { origin: allow, credentials: true });
@@ -106,7 +118,7 @@ app.use('/api/auth', authRouter);
 // TODO (sub-proyectos futuros): app.use('/api/exhibiciones', verifyToken, exhibicionesRouter);
 
 // ─── Serve frontend in production ─────────────────────────────────────────────
-if (process.env.NODE_ENV === 'production') {
+if (cleanEnv('NODE_ENV') === 'production') {
     const staticPath = path.join(__dirname, '../dist');
     app.use(express.static(staticPath));
     app.use((req: Request, res: Response, next: NextFunction) => {
@@ -117,5 +129,5 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.listen(port, () => {
-    console.log(`[EXH] Server running on port ${port} (${process.env.NODE_ENV || 'development'})`);
+    console.log(`[EXH] Server running on port ${port} (${cleanEnv('NODE_ENV') || 'development'})`);
 });

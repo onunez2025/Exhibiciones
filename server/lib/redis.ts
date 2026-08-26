@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import crypto from 'crypto';
+import { cleanEnv } from './security.js';
 
 const COOLDOWN_MS = 15_000;
 let circuitOpenUntil = 0;
@@ -20,12 +21,12 @@ export function recordRedisFailure(): void {
 let redisClient: Redis | null = null;
 
 export function getRedisClient(): Redis {
-    if (!redisClient) {
+    if (!redisClient || redisClient.status === 'end') {
         redisClient = new Redis({
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379'),
-            password: process.env.REDIS_PASSWORD || undefined,
-            db: parseInt(process.env.REDIS_DB || '0'),
+            host: cleanEnv('REDIS_HOST') || 'localhost',
+            port: parseInt(cleanEnv('REDIS_PORT') || '6379'),
+            password: cleanEnv('REDIS_PASSWORD') || undefined,
+            db: parseInt(cleanEnv('REDIS_DB') || '0'),
             lazyConnect: true,
             maxRetriesPerRequest: 1,
             retryStrategy: () => null, // no reconexión automática en segundo plano

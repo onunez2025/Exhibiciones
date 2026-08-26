@@ -9,13 +9,13 @@ describe('cleanEnv', () => {
     });
 
     it('returns the raw value when there are no surrounding quotes', () => {
-        process.env[KEY] = '@s0le@dm1nAI#82,';
-        expect(cleanEnv(KEY)).toBe('@s0le@dm1nAI#82,');
+        process.env[KEY] = '@Fake#Pass,1';
+        expect(cleanEnv(KEY)).toBe('@Fake#Pass,1');
     });
 
     it('strips a single layer of surrounding double quotes', () => {
-        process.env[KEY] = '"@s0le@dm1nAI#82,"';
-        expect(cleanEnv(KEY)).toBe('@s0le@dm1nAI#82,');
+        process.env[KEY] = '"@Fake#Pass,1"';
+        expect(cleanEnv(KEY)).toBe('@Fake#Pass,1');
     });
 
     it('strips a single layer of surrounding single quotes', () => {

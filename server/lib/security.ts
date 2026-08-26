@@ -27,3 +27,15 @@ export function sanitizeLog(val: unknown, maxLen = 200): string {
     const s = String(val ?? '').replace(/[\x00-\x1F\x7F]/g, '?');
     return s.length > maxLen ? s.substring(0, maxLen) + '…' : s;
 }
+
+// Leído en cada llamada, no al cargar el módulo — ver nota en server/db.ts.
+export function getJwtSecret(): string {
+    const secret = cleanEnv('JWT_SECRET');
+    if (!secret) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('JWT_SECRET no está configurado — no se puede arrancar en producción sin él.');
+        }
+        return 'fallback_development_secret_do_not_use';
+    }
+    return secret;
+}
