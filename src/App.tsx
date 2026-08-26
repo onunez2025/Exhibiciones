@@ -7,8 +7,8 @@ import { LoginPage } from './pages/LoginPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { PerfilPage } from './pages/PerfilPage.js';
 import { ComingSoonPage } from './pages/ComingSoonPage.js';
-import { Image, ListChecks, Ticket, Info } from 'lucide-react';
-// TODO (sub-proyectos futuros): importa tus páginas de módulo aquí
+import { ExhibicionesPage } from './pages/ExhibicionesPage.js';
+import { ListChecks, Ticket, Info } from 'lucide-react';
 
 export default function App() {
     return (
@@ -26,7 +26,7 @@ export default function App() {
                                 <Route index element={<Navigate to="/dashboard" replace />} />
                                 <Route path="/dashboard" element={<DashboardPage />} />
                                 <Route path="/perfil" element={<PerfilPage />} />
-                                <Route path="/exhibiciones" element={<ComingSoonPage titleKey="nav.exhibiciones" icon={Image} />} />
+                                <Route path="/exhibiciones" element={<ExhibicionesPage />} />
                                 <Route path="/checklist" element={<ComingSoonPage titleKey="nav.checklist" icon={ListChecks} />} />
                                 <Route path="/tickets" element={<ComingSoonPage titleKey="nav.tickets" icon={Ticket} />} />
                                 <Route path="/informacion" element={<ComingSoonPage titleKey="nav.informacion" icon={Info} />} />
