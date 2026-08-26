@@ -74,6 +74,13 @@ body { margin: 0; font-family: var(--font-sans); background-color: var(--color-b
 }
 .pop-in { animation: pop-in 220ms var(--ease-out-strong) forwards; }
 
+/* Menús desplegables (kebab, etc.) — nacen desde su propio origen
+   (arriba-derecha, donde está el botón que los abre), no desde el centro
+   como un modal. Skill emil-design-eng: "los popovers deben escalar desde
+   su disparador". */
+@keyframes dropdown-in { from { opacity: 0; transform: scale(0.95) translateY(-4px); } }
+.dropdown-in { animation: dropdown-in 150ms var(--ease-out-strong) forwards; transform-origin: top right; }
+
 /* ─── Transiciones de vista (View Transitions API) ──────────────────────── */
 ::view-transition-old(root) { animation: view-fade-out 180ms var(--ease-in-out-strong) forwards; }
 ::view-transition-new(root) { animation: view-fade-in 220ms var(--ease-out-strong) 60ms backwards; }
@@ -103,5 +110,6 @@ body { margin: 0; font-family: var(--font-sans); background-color: var(--color-b
     @keyframes fade-only { from { opacity: 0; } to { opacity: 1; } }
     .pop-in { animation-name: fade-only; animation-duration: 150ms; }
     .modal-content-in { animation-name: fade-only; animation-duration: 150ms; }
+    .dropdown-in { animation-name: fade-only; animation-duration: 120ms; }
     ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
 }

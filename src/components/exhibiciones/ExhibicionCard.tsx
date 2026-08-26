@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, ListChecks, Ticket, Image as ImageIcon, Store, Tag, MapPin } from 'lucide-react';
+import { Eye, ListChecks, Ticket, Image as ImageIcon, Store, Tag, MapPin, MoreVertical } from 'lucide-react';
 import type { Exhibicion } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
@@ -10,10 +11,7 @@ export interface ExhibicionCardProps {
 }
 
 // Colores de estado semánticos (ámbar/verde) — no son "decoración", son la
-// convención universal de pendiente/aprobado. Distinto del error que se
-// corrigió acá: los 3 botones de acción NO llevan colores propios, porque
-// los 3 llevan al mismo lugar (Próximamente) — un color distinto por botón
-// mentiría sobre que hacen cosas distintas.
+// convención universal de pendiente/aprobado.
 const ESTADO_STYLES: Record<1 | 2, { badge: string; accent: string }> = {
     1: { badge: 'bg-amber-500/15 text-amber-700 border-amber-400/30', accent: 'before:bg-amber-400' },
     2: { badge: 'bg-emerald-500/15 text-emerald-700 border-emerald-400/30', accent: 'before:bg-emerald-400' },
@@ -37,6 +35,27 @@ function InfoField({ icon: Icon, label, value }: { icon: typeof Store; label: st
 
 export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
     const { t } = useTranslation();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Cierra el menú al hacer click fuera — patrón estándar de dropdown,
+    // no hay otro en el codebase todavía así que se implementa acá.
+    useEffect(() => {
+        if (!menuOpen) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [menuOpen]);
+
+    const handleAction = (action: 'ver' | 'checklist' | 'ticket') => {
+        setMenuOpen(false);
+        onAction(action);
+    };
+
     const fecha = new Date(exhibicion.fechaCrea);
     const fechaTexto = Number.isNaN(fecha.getTime())
         ? ''
@@ -54,51 +73,64 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
     return (
         <div
             className={cn(
-                'relative overflow-hidden border border-cb-border bg-card px-4 py-3 shadow-cb-level-1',
+                'relative border border-cb-border bg-card px-4 py-3 shadow-cb-level-1',
                 'hover:shadow-cb-level-2 hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200',
-                "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1",
+                "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:rounded-l-[inherit]",
                 SIATC_THEME.TOKENS.RADIUS.CARD,
                 estadoStyle.accent
             )}
         >
-            {/* Fila 1: ícono de módulo · nro · nombre · badge de estado · fecha */}
-            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+            {/* Fila 1: ícono de módulo · nro · nombre · badge de estado · menú de acciones */}
+            <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <ImageIcon className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-black text-primary shrink-0">{exhibicion.nroExhibicion}</span>
-                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-[80px]">{exhibicion.nombre}</span>
+                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-[60px]">{exhibicion.nombre}</span>
                 <span className={cn('shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', estadoStyle.badge)}>
                     {estadoLabel}
                 </span>
-                {fechaTexto && (
-                    <span className="text-[10px] text-cb-text-secondary shrink-0">{fechaTexto}</span>
-                )}
+
+                {/* Menú de acciones — reemplaza los 3 botones sueltos, que en
+                    mobile competían por espacio con los campos de info y se
+                    cortaban. Un solo botón, siempre cabe. */}
+                <div className="relative shrink-0" ref={menuRef}>
+                    <button
+                        type="button"
+                        onClick={() => setMenuOpen(v => !v)}
+                        aria-label={t('exhibiciones_lista.acciones')}
+                        aria-expanded={menuOpen}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-cb-text-secondary hover:bg-muted hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer"
+                    >
+                        <MoreVertical className="w-4 h-4" />
+                    </button>
+                    {menuOpen && (
+                        <div className="dropdown-in absolute right-0 top-full mt-1 z-20 w-40 py-1.5 bg-card border border-cb-border rounded-xl shadow-cb-level-3">
+                            <button type="button" onClick={() => handleAction('ver')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-cb-text-primary hover:bg-muted transition-colors duration-100 cursor-pointer">
+                                <Eye className="w-3.5 h-3.5 text-cb-text-secondary" /> {t('exhibiciones_lista.accion_ver')}
+                            </button>
+                            <button type="button" onClick={() => handleAction('checklist')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-cb-text-primary hover:bg-muted transition-colors duration-100 cursor-pointer">
+                                <ListChecks className="w-3.5 h-3.5 text-cb-text-secondary" /> {t('exhibiciones_lista.accion_checklist')}
+                            </button>
+                            <button type="button" onClick={() => handleAction('ticket')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-cb-text-primary hover:bg-muted transition-colors duration-100 cursor-pointer">
+                                <Ticket className="w-3.5 h-3.5 text-cb-text-secondary" /> {t('exhibiciones_lista.accion_ticket')}
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Fila 2: campos de info — grilla propia, nunca comparte fila
-                con los botones (eso fue lo que se cortaba en mobile: un solo
-                flex-wrap con 4 campos + botones no alcanzaba a envolver bien
-                en pantallas angostas). */}
+            {fechaTexto && (
+                <p className="text-[10px] text-cb-text-secondary mt-1 pl-9">{fechaTexto}</p>
+            )}
+
+            {/* Fila 2: campos de info — grilla propia (2 columnas en mobile,
+                4 en sm+). */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5 mt-2 pl-9">
                 <InfoField icon={Store} label={t('exhibiciones_lista.campo_tienda')} value={exhibicion.clienteNombre} />
                 <InfoField icon={Store} label={t('exhibiciones_lista.campo_sucursal')} value={exhibicion.sucursalNombre} />
                 <InfoField icon={Tag} label={t('exhibiciones_lista.campo_tipo')} value={exhibicion.tipoNombre ?? '—'} />
                 <InfoField icon={MapPin} label={t('exhibiciones_lista.campo_ubicacion')} value={exhibicion.ubicacionNombre ?? '—'} />
-            </div>
-
-            {/* Fila 3: botones — fila propia, con flex-wrap como red de
-                seguridad en pantallas muy angostas. */}
-            <div className="flex items-center gap-1.5 flex-wrap mt-2.5 pl-9">
-                <button type="button" onClick={() => onAction('ver')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                    <Eye className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ver')}
-                </button>
-                <button type="button" onClick={() => onAction('checklist')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                    <ListChecks className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_checklist')}
-                </button>
-                <button type="button" onClick={() => onAction('ticket')} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' h-7 px-2.5 gap-1.5 text-xs cursor-pointer'}>
-                    <Ticket className="w-3.5 h-3.5" /> {t('exhibiciones_lista.accion_ticket')}
-                </button>
             </div>
         </div>
     );

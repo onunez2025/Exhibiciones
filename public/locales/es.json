@@ -52,6 +52,7 @@
         "title": "Exhibiciones",
         "subtitle": "Lista de exhibiciones registradas",
         "search_placeholder": "N° Exhibición...",
+        "acciones": "Acciones",
         "filtros": "Filtros",
         "filtro_tipo": "Tipo de exhibición",
         "filtro_estado": "Estado",

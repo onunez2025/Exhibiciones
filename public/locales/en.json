@@ -52,6 +52,7 @@
         "title": "Exhibits",
         "subtitle": "List of registered exhibits",
         "search_placeholder": "Exhibit N°...",
+        "acciones": "Actions",
         "filtros": "Filters",
         "filtro_tipo": "Exhibit type",
         "filtro_estado": "Status",
