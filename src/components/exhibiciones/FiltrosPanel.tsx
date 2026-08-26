@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/apiClient.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -18,14 +18,16 @@ export function FiltrosPanel({ open, filtros, onApply, onClear }: FiltrosPanelPr
     const { t } = useTranslation();
     const [opciones, setOpciones] = useState<ExhibicionesFiltroOpciones | null>(null);
     const [draft, setDraft] = useState<ExhibicionesFiltros>(filtros);
+    const hasFetchedOpciones = useRef(false);
 
     useEffect(() => {
-        if (open && !opciones) {
+        if (open && !hasFetchedOpciones.current) {
+            hasFetchedOpciones.current = true;
             apiClient.get<ExhibicionesFiltroOpciones>('/exhibiciones/opciones-filtro')
                 .then(setOpciones)
                 .catch(() => setOpciones({ tipos: [], ubicaciones: [] }));
         }
-    }, [open, opciones]);
+    }, [open]);
 
     useEffect(() => {
         setDraft(filtros);
