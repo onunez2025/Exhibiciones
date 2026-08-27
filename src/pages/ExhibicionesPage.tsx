@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, RefreshCw, Loader2 } from 'lucide-react';
+import { Search, Filter, RefreshCw, Loader2, Plus } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useDialog } from '../context/DialogContext.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
@@ -137,6 +137,13 @@ export function ExhibicionesPage() {
                         se está buscando/filtrando, no un botón suelto). En
                         sm+ las tres caben en una sola fila. */}
                     <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/exhibiciones/nueva', { viewTransition: true })}
+                            className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY + ' gap-1.5 cursor-pointer shrink-0'}
+                        >
+                            <Plus className="w-4 h-4" /> {t('exhibiciones_lista.accion_nueva')}
+                        </button>
                         <button
                             type="button"
                             onClick={() => setFiltrosOpen(v => !v)}

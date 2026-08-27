@@ -9,6 +9,7 @@ import { PerfilPage } from './pages/PerfilPage.js';
 import { ComingSoonPage } from './pages/ComingSoonPage.js';
 import { ExhibicionesPage } from './pages/ExhibicionesPage.js';
 import { ExhibicionDetallePage } from './pages/ExhibicionDetallePage.js';
+import { ExhibicionCrearPage } from './pages/ExhibicionCrearPage.js';
 import { ListChecks, Ticket, Info } from 'lucide-react';
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
                                 <Route path="/dashboard" element={<DashboardPage />} />
                                 <Route path="/perfil" element={<PerfilPage />} />
                                 <Route path="/exhibiciones" element={<ExhibicionesPage />} />
+                                <Route path="/exhibiciones/nueva" element={<ExhibicionCrearPage />} />
                                 <Route path="/exhibiciones/:id" element={<ExhibicionDetallePage />} />
                                 <Route path="/checklist" element={<ComingSoonPage titleKey="nav.checklist" icon={ListChecks} />} />
                                 <Route path="/tickets" element={<ComingSoonPage titleKey="nav.tickets" icon={Ticket} />} />
