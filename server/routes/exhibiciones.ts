@@ -337,6 +337,78 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/:id/componentes', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const tipo = Number(req.body?.tipo);
+        const codigoProducto = typeof req.body?.codigoProducto === 'string' ? req.body.codigoProducto.trim() : '';
+        const cantidad = Number(req.body?.cantidad);
+
+        if (tipo !== 1 && tipo !== 2) {
+            res.status(400).json({ error: 'Tipo de componente inválido.' });
+            return;
+        }
+        if (!codigoProducto) {
+            res.status(400).json({ error: 'Selecciona un producto o carcasa.' });
+            return;
+        }
+        if (!Number.isInteger(cantidad) || cantidad <= 0) {
+            res.status(400).json({ error: 'La cantidad debe ser un número entero mayor a 0.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        const exists = await pool.request().input('id', sql.BigInt, id)
+            .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+        if (exists.recordset.length === 0) {
+            res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+
+        // Verifica que el código exista en el catálogo con el tipo correcto
+        // — evita insertar un código inventado si alguien arma la request a
+        // mano en vez de usar el selector.
+        const catalogoTipo = tipo === 1 ? 'PRD' : 'CAR';
+        const productoResult = await pool.request()
+            .input('codigo', sql.VarChar(20), codigoProducto)
+            .input('tipo', sql.VarChar(3), catalogoTipo)
+            .query(`
+                SELECT VC_articulo_nombre2 as nombre
+                FROM EXHIBICION.WEB_MARKETING_PRODUCTOS
+                WHERE VC_articulo_codigo = @codigo AND VC_tipo = @tipo
+            `);
+        const producto = productoResult.recordset[0];
+        if (!producto) {
+            res.status(400).json({ error: 'Producto no encontrado en el catálogo.' });
+            return;
+        }
+
+        const insertResult = await pool.request()
+            .input('exhibicionId', sql.BigInt, id)
+            .input('codigo', sql.VarChar(20), codigoProducto)
+            .input('cantidad', sql.Int, cantidad)
+            .input('tipo', sql.Int, tipo)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                INSERT INTO EXHIBICION.TB_EXHIBICION_COMPONENTE
+                    (IN_exhibicion_id, VC_codigo_producto, IN_cantidad, IN_tipo, IN_estado, VC_usuario_crea, DT_fecha_crea)
+                OUTPUT INSERTED.IN_exhibicion_componente_id as id
+                VALUES (@exhibicionId, @codigo, @cantidad, @tipo, 1, @usuario, GETDATE())
+            `);
+
+        res.status(201).json({ id: insertResult.recordset[0].id, nombre: producto.nombre, cantidad });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] agregar componente error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.post('/:id/aprobar', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
