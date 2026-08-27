@@ -32,5 +32,6 @@ Variables de entorno a configurar en el panel (nunca en un `.env` commiteado):
 | `JWT_SECRET` | uno nuevo para producción |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | opcionales |
 | `ALLOWED_ORIGINS` | opcional — mismo-origen se permite automático |
+| `BLOB_CONTAINER_URL` / `BLOB_SAS_TOKEN` | SAS de solo lectura y larga duración para el contenedor `exhibiciones` (cuenta `soleblob1`) — sin esto las fotos de exhibiciones no cargan |
 
 Rama que EasyPanel debe seguir: `master`.

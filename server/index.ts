@@ -129,6 +129,10 @@ if (cleanEnv('NODE_ENV') === 'production') {
     });
 }
 
+if (cleanEnv('NODE_ENV') === 'production' && !cleanEnv('BLOB_CONTAINER_URL')) {
+    console.warn('[EXH] BLOB_CONTAINER_URL no está configurado — las fotos de exhibiciones no cargarán.');
+}
+
 app.listen(port, () => {
     console.log(`[EXH] Server running on port ${port} (${cleanEnv('NODE_ENV') || 'development'})`);
 });

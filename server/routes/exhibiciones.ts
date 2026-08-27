@@ -8,6 +8,7 @@ import { buildExhibicionesFilter } from '../lib/exhibicionesFilter.js';
 import type { ExhibicionesQueryParams, QueryParam } from '../lib/exhibicionesFilter.js';
 import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
+import { logAudit } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -250,6 +251,8 @@ router.post('/:id/aprobar', async (req: Request, res: Response) => {
             }
             return;
         }
+
+        await logAudit(req, 'APROBAR', 'EXHIBICION', String(id));
 
         res.json({ estadoId: 2 });
     } catch (err: unknown) {
