@@ -15,27 +15,62 @@ const router = Router();
 // Catálogo real vive en dbo.PV_TABLA (tabla genérica de parámetros
 // compartida por todo el ERP) — no en el esquema EXHIBICION. Confirmado
 // leyendo EXHIBICION.PROC_BANDEJA_EXHIBICION, el stored procedure que
-// alimentaba esta misma pantalla en la app anterior.
+// alimentaba esta misma pantalla en la app anterior. Compartido entre
+// /opciones-filtro y /opciones-crear — mismas dos consultas, dos
+// consumidores distintos.
+async function obtenerCatalogosPvTabla(pool: sql.ConnectionPool) {
+    const [tipos, pisoDetalles] = await Promise.all([
+        pool.request().query(`
+            SELECT IN_id as id, VC_descripcion as nombre
+            FROM dbo.PV_TABLA
+            WHERE VC_tabla = 'EXHIBICION_TIPO' AND CH_activo = '1'
+            ORDER BY VC_descripcion
+        `),
+        pool.request().query(`
+            SELECT IN_id as id, VC_descripcion as nombre
+            FROM dbo.PV_TABLA
+            WHERE VC_tabla = 'EXHIBICION_PISO_DETALLE' AND CH_activo = '1'
+            ORDER BY VC_descripcion
+        `),
+    ]);
+    return { tipos: tipos.recordset, pisoDetalles: pisoDetalles.recordset };
+}
+
 router.get('/opciones-filtro', async (_req: Request, res: Response) => {
     try {
         const pool = await getDbConnection();
-        const [tipos, ubicaciones] = await Promise.all([
-            pool.request().query(`
-                SELECT IN_id as id, VC_descripcion as nombre
-                FROM dbo.PV_TABLA
-                WHERE VC_tabla = 'EXHIBICION_TIPO' AND CH_activo = '1'
-                ORDER BY VC_descripcion
-            `),
-            pool.request().query(`
-                SELECT IN_id as id, VC_descripcion as nombre
-                FROM dbo.PV_TABLA
-                WHERE VC_tabla = 'EXHIBICION_PISO_DETALLE' AND CH_activo = '1'
-                ORDER BY VC_descripcion
-            `),
-        ]);
-        res.json({ tipos: tipos.recordset, ubicaciones: ubicaciones.recordset });
+        const { tipos, pisoDetalles } = await obtenerCatalogosPvTabla(pool);
+        res.json({ tipos, ubicaciones: pisoDetalles });
     } catch (err: unknown) {
         console.error('[Exhibiciones] opciones-filtro error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+// Tienda/Sucursal para el formulario de creación: las combinaciones que YA
+// existen en TB_EXHIBICION (34 clientes / 77 sucursales), no el maestro SAP
+// completo (SAP.TB_KNA1, 15,743 clientes de toda la empresa) ni las tablas
+// de asignación por usuario de la app vieja (TB_PROMOTOR_CLIENTE, etc. —
+// verificado que ningún usuario de esta app existe en SEGURIDAD.TB_USUARIO,
+// esa lógica de scoping no es reusable).
+router.get('/opciones-crear', async (_req: Request, res: Response) => {
+    try {
+        const pool = await getDbConnection();
+        const [{ tipos, pisoDetalles }, tiendasResult] = await Promise.all([
+            obtenerCatalogosPvTabla(pool),
+            pool.request().query(`
+                SELECT DISTINCT
+                    VC_cliente_codigo as clienteCodigo, VC_cliente_nombre as clienteNombre,
+                    VC_sucursal_codigo as sucursalCodigo, VC_sucursal_nombre as sucursalNombre,
+                    VC_direccion as direccion
+                FROM EXHIBICION.TB_EXHIBICION
+                WHERE VC_cliente_codigo IS NOT NULL AND VC_sucursal_codigo IS NOT NULL
+                ORDER BY VC_cliente_nombre, VC_sucursal_nombre
+            `),
+        ]);
+        res.json({ tiendas: tiendasResult.recordset, tipos, pisoDetalles });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] opciones-crear error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
