@@ -53,7 +53,10 @@ export function DetallePrincipalTab({ detalle, onAprobado }: DetallePrincipalTab
                 {estadoLabelKey ? t(estadoLabelKey) : '—'}
             </span>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* lg:grid-cols-3 — con solo 2 columnas, 6 campos cortos (ej.
+                "1", "Pasillo") dejaban celdas de ~430px vacías en desktop;
+                3 columnas los reparte en 2 filas parejas de 3. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Campo label={t('exhibiciones_lista.campo_tienda')} value={detalle.clienteNombre} />
                 <Campo label={t('exhibiciones_lista.campo_sucursal')} value={detalle.sucursalNombre} />
                 <Campo label={t('exhibicion_detalle.campo_nombre')} value={detalle.nombre} />

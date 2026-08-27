@@ -77,7 +77,11 @@ export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
                     </p>
                 )}
                 {menuItems.map((item, i) => {
-                    const isActive = location.pathname === item.path;
+                    // No solo el match exacto — un módulo con vistas de
+                    // detalle (ej. /exhibiciones/:id) debe seguir resaltando
+                    // su item de menú padre (/exhibiciones), no solo cuando
+                    // el pathname es idéntico.
+                    const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                     const Icon = item.icon;
                     // Stagger de entrada — solo se ve una vez, al montar el
                     // sidebar (no en cada navegación, no en cada click).

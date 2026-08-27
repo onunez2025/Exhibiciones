@@ -18,9 +18,13 @@ function Grupo({ titulo, items, columnaCantidad }: { titulo: string; items: Exhi
             ) : (
                 <ul className="border border-t-0 border-cb-border rounded-b-xl divide-y divide-cb-border">
                     {items.map(item => (
-                        <li key={item.id} className="flex items-center justify-between px-3 py-2.5 text-sm">
+                        // items-start (no items-center) — un nombre largo se
+                        // envuelve a 2-3 líneas en pantallas angostas; con
+                        // centrado vertical la cantidad quedaba flotando en
+                        // medio del bloque de texto en vez de alineada arriba.
+                        <li key={item.id} className="flex items-start justify-between gap-3 px-3 py-2.5 text-sm">
                             <span className="text-cb-text-primary">{item.nombre ?? '—'}</span>
-                            <span className="font-bold text-cb-text-primary shrink-0 ml-3">{item.cantidad}</span>
+                            <span className="font-bold text-cb-text-primary shrink-0">{item.cantidad}</span>
                         </li>
                     ))}
                 </ul>

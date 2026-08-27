@@ -33,6 +33,12 @@ export const SIATC_THEME = {
     TYPOGRAPHY: {
         PAGE_TITLE: CRYPTO_BLUE_TOKENS.TYPOGRAPHY.H1,
         PAGE_SUBTITLE: `${CRYPTO_BLUE_TOKENS.TYPOGRAPHY.BODY_SMALL} hidden sm:block`,
+        // Variante sin `hidden sm:block` — para cuando el "subtítulo" no es
+        // una descripción decorativa (segura de ocultar en mobile) sino el
+        // dato que identifica el registro (ej. el nombre de una exhibición
+        // en su vista de detalle). Ocultarlo ahí sería perder información,
+        // no simplificar.
+        PAGE_SUBTITLE_VISIBLE: `${CRYPTO_BLUE_TOKENS.TYPOGRAPHY.BODY_SMALL} truncate`,
     },
 
     COMPONENTS: {

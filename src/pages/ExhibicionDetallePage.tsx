@@ -63,7 +63,11 @@ export function ExhibicionDetallePage() {
                     </button>
                     <div>
                         <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{detalle?.nroExhibicion ?? t('exhibicion_detalle.title')}</h1>
-                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{detalle?.nombre ?? ''}</p>
+                        {/* PAGE_SUBTITLE_VISIBLE (no PAGE_SUBTITLE) — acá el
+                            nombre es el dato principal que identifica el
+                            registro, no una descripción decorativa; no debe
+                            desaparecer en mobile. */}
+                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE_VISIBLE}>{detalle?.nombre ?? ''}</p>
                     </div>
                 </div>
             </div>
@@ -98,8 +102,8 @@ export function ExhibicionDetallePage() {
                                         onClick={() => setTab(key)}
                                         className={
                                             tab === key
-                                                ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-card text-primary shadow-sm cursor-pointer'
-                                                : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-cb-text-secondary hover:text-primary transition-colors duration-150 cursor-pointer'
+                                                ? 'px-3.5 py-2.5 rounded-lg text-xs font-bold bg-card text-primary shadow-sm cursor-pointer'
+                                                : 'px-3.5 py-2.5 rounded-lg text-xs font-bold text-cb-text-secondary hover:text-primary transition-colors duration-150 cursor-pointer'
                                         }
                                     >
                                         {label}

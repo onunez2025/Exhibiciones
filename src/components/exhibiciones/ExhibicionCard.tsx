@@ -41,6 +41,32 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [menuOpen]);
 
+    // Cada tarjeta es independiente y no comparte estado con sus hermanas —
+    // sin esto, abrir el menú de una tarjeta y luego el de otra dejaba los
+    // dos abiertos a la vez en pantalla. Un evento en window (sin store ni
+    // prop-drilling) avisa "se abrió otro menú" para que cualquier tarjeta
+    // que no sea la que lo disparó se cierre sola.
+    useEffect(() => {
+        const handleOtherCardOpened = (e: Event) => {
+            if ((e as CustomEvent<number>).detail !== exhibicion.id) setMenuOpen(false);
+        };
+        window.addEventListener('exhibicion-card-menu-open', handleOtherCardOpened);
+        return () => window.removeEventListener('exhibicion-card-menu-open', handleOtherCardOpened);
+    }, [exhibicion.id]);
+
+    // Sin updater funcional a propósito — despachar el evento (un efecto
+    // secundario) desde *dentro* de un `setMenuOpen(v => ...)` hace que
+    // React lo ejecute durante la fase de render y dispare, sincrónicamente,
+    // el `setState` de OTRA tarjeta ahí mismo — React lo rechaza con
+    // "Cannot update a component while rendering a different component".
+    // Este handler solo corre en un evento de click, así que leer `menuOpen`
+    // del closure es seguro.
+    const toggleMenu = () => {
+        const next = !menuOpen;
+        setMenuOpen(next);
+        if (next) window.dispatchEvent(new CustomEvent('exhibicion-card-menu-open', { detail: exhibicion.id }));
+    };
+
     const handleAction = (action: 'ver' | 'checklist' | 'ticket') => {
         setMenuOpen(false);
         onAction(action);
@@ -87,10 +113,10 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
                 <div className="relative shrink-0" ref={menuRef}>
                     <button
                         type="button"
-                        onClick={() => setMenuOpen(v => !v)}
+                        onClick={toggleMenu}
                         aria-label={t('exhibiciones_lista.acciones')}
                         aria-expanded={menuOpen}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-cb-text-secondary hover:bg-muted hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-cb-text-secondary hover:bg-muted hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer"
                     >
                         <MoreVertical className="w-4 h-4" />
                     </button>
