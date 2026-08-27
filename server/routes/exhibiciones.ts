@@ -7,6 +7,7 @@ import sql from 'mssql';
 import { buildExhibicionesFilter } from '../lib/exhibicionesFilter.js';
 import type { ExhibicionesQueryParams, QueryParam } from '../lib/exhibicionesFilter.js';
 import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
+import { validarExhibicionCrear } from '../lib/exhibicionCrear.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { logAudit } from '../middleware/auth.js';
 
@@ -151,6 +152,66 @@ router.get('/', async (req: Request, res: Response) => {
         });
     } catch (err: unknown) {
         console.error('[Exhibiciones] list error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.post('/', async (req: Request, res: Response) => {
+    try {
+        const validacion = validarExhibicionCrear(req.body);
+        if (!validacion.valido) {
+            res.status(400).json({ error: validacion.error });
+            return;
+        }
+        const { clienteCodigo, clienteNombre, sucursalCodigo, sucursalNombre, direccion, nombre, tipoId, piso, pisoDetalleId } = validacion.datos;
+
+        const pool = await getDbConnection();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const request = new sql.Request(transaction);
+            request.input('nombre', sql.VarChar(150), nombre);
+            request.input('clienteCodigo', sql.VarChar(10), clienteCodigo);
+            request.input('clienteNombre', sql.VarChar(250), clienteNombre);
+            request.input('sucursalCodigo', sql.VarChar(10), sucursalCodigo);
+            request.input('sucursalNombre', sql.VarChar(250), sucursalNombre);
+            request.input('direccion', sql.VarChar(250), direccion);
+            request.input('tipoId', sql.Int, tipoId);
+            request.input('piso', sql.VarChar(100), piso);
+            request.input('pisoDetalleId', sql.Int, pisoDetalleId);
+            request.input('usuario', sql.VarChar(50), req.user?.username ?? 'system');
+
+            // WITH (UPDLOCK, HOLDLOCK) — a diferencia del proc viejo
+            // (PROC_GUARDAR_EXHIBICION), esto sí evita que dos creaciones
+            // simultáneas lean el mismo MAX y generen el mismo N°.
+            const result = await request.query(`
+                DECLARE @sgte INT
+                SELECT @sgte = ISNULL(MAX(CONVERT(INT, SUBSTRING(VC_nro_exhibicion, 4, 99))), 0) + 1
+                FROM EXHIBICION.TB_EXHIBICION WITH (UPDLOCK, HOLDLOCK)
+                WHERE SUBSTRING(VC_nro_exhibicion, 1, 3) = 'EXB'
+
+                DECLARE @nro VARCHAR(10) = 'EXB' + RIGHT('0000000' + CONVERT(VARCHAR, @sgte), 7)
+
+                INSERT INTO EXHIBICION.TB_EXHIBICION
+                    (VC_nombre, VC_cliente_codigo, VC_cliente_nombre, VC_sucursal_codigo, VC_sucursal_nombre,
+                     VC_direccion, IN_exhibicion_tipo_id, VC_piso, IN_piso_detalle_id, IN_estado_id,
+                     VC_usuario_crea, DT_fecha_crea, VC_nro_exhibicion)
+                OUTPUT INSERTED.IN_exhibicion_id as id, INSERTED.VC_nro_exhibicion as nroExhibicion
+                VALUES (@nombre, @clienteCodigo, @clienteNombre, @sucursalCodigo, @sucursalNombre,
+                        @direccion, @tipoId, @piso, @pisoDetalleId, 1,
+                        @usuario, GETDATE(), @nro)
+            `);
+
+            await transaction.commit();
+            const row = result.recordset[0];
+            res.status(201).json({ id: row.id, nroExhibicion: row.nroExhibicion });
+        } catch (txErr) {
+            await transaction.rollback();
+            throw txErr;
+        }
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] crear error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
