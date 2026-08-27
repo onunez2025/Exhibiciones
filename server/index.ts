@@ -110,6 +110,12 @@ app.use(cors((req, callback) => {
     callback(null, { origin: allow, credentials: true });
 }));
 
+// Límite más alto SOLO para subir fotos (base64 infla ~33% el tamaño real
+// de la imagen) — va ANTES del parser global a propósito: body-parser
+// marca la request como ya parseada una vez que la lee, así que el parser
+// global de abajo la deja pasar sin volver a aplicar su límite de 2mb más
+// chico. Todas las demás rutas siguen limitadas a 2mb.
+app.use('/api/exhibiciones/:id/fotos', express.json({ limit: '12mb' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
 

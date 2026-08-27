@@ -9,9 +9,13 @@ import type { ExhibicionesQueryParams, QueryParam } from '../lib/exhibicionesFil
 import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
 import { validarExhibicionCrear } from '../lib/exhibicionCrear.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
+import { decodificarFotoBase64 } from '../lib/blobUpload.js';
+import { randomUUID } from 'crypto';
 import { logAudit } from '../middleware/auth.js';
 
 const router = Router();
+
+const MAX_FOTO_BYTES = 8 * 1024 * 1024; // 8MB — ver decodificarFotoBase64
 
 // Catálogo real vive en dbo.PV_TABLA (tabla genérica de parámetros
 // compartida por todo el ERP) — no en el esquema EXHIBICION. Confirmado
@@ -405,6 +409,79 @@ router.post('/:id/componentes', async (req: Request, res: Response) => {
         res.status(201).json({ id: insertResult.recordset[0].id, nombre: producto.nombre, cantidad });
     } catch (err: unknown) {
         console.error('[Exhibiciones] agregar componente error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.post('/:id/fotos', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+        const exists = await pool.request().input('id', sql.BigInt, id)
+            .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+        if (exists.recordset.length === 0) {
+            res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+
+        const contentType = typeof req.body?.contentType === 'string' ? req.body.contentType : '';
+        const archivoBase64 = typeof req.body?.archivoBase64 === 'string' ? req.body.archivoBase64 : '';
+        const esFotoPrincipal = req.body?.esFotoPrincipal === true;
+
+        const resultado = decodificarFotoBase64(archivoBase64, contentType, MAX_FOTO_BYTES);
+        if (!resultado.ok) {
+            res.status(400).json({ error: resultado.error });
+            return;
+        }
+
+        const blobContainerUrl = cleanEnv('BLOB_CONTAINER_URL');
+        const blobSasToken = cleanEnv('BLOB_SAS_TOKEN');
+        const nombreArchivo = `${randomUUID()}${resultado.foto.extension}`;
+
+        const uploadRes = await fetch(`${blobContainerUrl}/${nombreArchivo}?${blobSasToken}`, {
+            method: 'PUT',
+            headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': contentType },
+            body: resultado.foto.buffer,
+        });
+        if (!uploadRes.ok) {
+            const detalle = await uploadRes.text().catch(() => '');
+            console.error('[Exhibiciones] subida a blob falló:', uploadRes.status, detalle);
+            res.status(502).json({ error: 'No se pudo subir la foto. Intenta de nuevo.' });
+            return;
+        }
+
+        // Nunca deja dos fotos marcadas como principal a la vez (a
+        // diferencia de datos históricos donde sí puede pasar).
+        if (esFotoPrincipal) {
+            await pool.request().input('id', sql.BigInt, id)
+                .query('UPDATE EXHIBICION.TB_EXHIBICION_FOTO SET BI_es_foto_principal = 0 WHERE IN_exhibicion_id = @id');
+        }
+
+        const insertResult = await pool.request()
+            .input('exhibicionId', sql.BigInt, id)
+            .input('nombre', sql.VarChar(200), nombreArchivo)
+            .input('extension', sql.VarChar(10), resultado.foto.extension)
+            .input('esFotoPrincipal', sql.Bit, esFotoPrincipal)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                INSERT INTO EXHIBICION.TB_EXHIBICION_FOTO
+                    (IN_exhibicion_id, VC_directorio, VC_archivo_nombre, VC_extension, IN_estado, VC_usuario_crea, DT_fecha_crea, BI_es_foto_principal)
+                OUTPUT INSERTED.IN_exhibicion_foto_id as id
+                VALUES (@exhibicionId, '', @nombre, @extension, 1, @usuario, GETDATE(), @esFotoPrincipal)
+            `);
+
+        res.status(201).json({
+            id: insertResult.recordset[0].id,
+            url: buildFotoUrl(blobContainerUrl, blobSasToken, nombreArchivo),
+            esFotoPrincipal,
+        });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] agregar foto error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
