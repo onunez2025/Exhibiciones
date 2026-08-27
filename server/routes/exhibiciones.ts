@@ -216,6 +216,29 @@ router.post('/', async (req: Request, res: Response) => {
     }
 });
 
+// Catálogo completo para el selector "Agregar Carcasa"/"Agregar Producto"
+// — solo PRD y CAR (no 'MUE', ver spec). WEB_MARKETING_PRODUCTOS tiene 216
+// PRD y 44 CAR — chico, se carga una vez y se filtra en el navegador.
+router.get('/catalogo-componentes', async (_req: Request, res: Response) => {
+    try {
+        const pool = await getDbConnection();
+        const [productos, carcasas] = await Promise.all([
+            pool.request().query(`
+                SELECT VC_articulo_codigo as codigo, VC_articulo_nombre2 as nombre
+                FROM EXHIBICION.WEB_MARKETING_PRODUCTOS WHERE VC_tipo = 'PRD' ORDER BY nombre
+            `),
+            pool.request().query(`
+                SELECT VC_articulo_codigo as codigo, VC_articulo_nombre2 as nombre
+                FROM EXHIBICION.WEB_MARKETING_PRODUCTOS WHERE VC_tipo = 'CAR' ORDER BY nombre
+            `),
+        ]);
+        res.json({ productos: productos.recordset, carcasas: carcasas.recordset });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] catalogo-componentes error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
