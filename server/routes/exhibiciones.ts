@@ -11,6 +11,7 @@ import { validarExhibicionCrear } from '../lib/exhibicionCrear.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { decodificarFotoBase64 } from '../lib/blobUpload.js';
 import { agruparCatalogoChecklist } from '../lib/checklistCatalogo.js';
+import { validarChecklistItems } from '../lib/checklistCrear.js';
 import { randomUUID } from 'crypto';
 import { logAudit } from '../middleware/auth.js';
 
@@ -512,6 +513,88 @@ router.post('/:id/fotos', async (req: Request, res: Response) => {
         });
     } catch (err: unknown) {
         console.error('[Exhibiciones] agregar foto error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.post('/:id/checklist', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        const exists = await pool.request().input('id', sql.BigInt, id)
+            .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+        if (exists.recordset.length === 0) {
+            res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+
+        const codigosResult = await pool.request().query(`
+            SELECT IN_id as id FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
+        `);
+        const codigosValidos: string[] = codigosResult.recordset.map((r: { id: number }) => String(r.id));
+
+        const validacion = validarChecklistItems(req.body, codigosValidos);
+        if (!validacion.valido) {
+            res.status(400).json({ error: validacion.error });
+            return;
+        }
+
+        const usuario = req.user?.username ?? 'system';
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const cabeceraRequest = new sql.Request(transaction);
+            cabeceraRequest.input('exhibicionId', sql.BigInt, id);
+            cabeceraRequest.input('usuario', sql.VarChar(50), usuario);
+
+            // WITH (UPDLOCK, HOLDLOCK) — mismo resguardo de carrera que el
+            // N° de exhibición: dos creaciones simultáneas en el mismo mes
+            // nunca deben generar el mismo IN_checklist_number.
+            const cabeceraResult = await cabeceraRequest.query(`
+                DECLARE @prefix INT = CONVERT(INT, CONCAT(YEAR(GETDATE()), RIGHT('00' + CONVERT(VARCHAR, MONTH(GETDATE())), 2), '000'))
+                DECLARE @sgte INT
+                SELECT @sgte = ISNULL(MAX(IN_checklist_number), @prefix) + 1
+                FROM EXHIBICION.TB_CHECKLIST WITH (UPDLOCK, HOLDLOCK)
+                WHERE CONCAT(YEAR(DT_fecha_crea), RIGHT('00' + CONVERT(VARCHAR, MONTH(DT_fecha_crea)), 2))
+                    = CONCAT(YEAR(GETDATE()), RIGHT('00' + CONVERT(VARCHAR, MONTH(GETDATE())), 2))
+
+                INSERT INTO EXHIBICION.TB_CHECKLIST
+                    (IN_checklist_number, IN_exhibicion_id, IN_estado_id, VC_usuario_crea, DT_fecha_crea)
+                OUTPUT INSERTED.IN_checklist_id as id, INSERTED.IN_checklist_number as checklistNumber
+                VALUES (@sgte, @exhibicionId, 1, @usuario, GETDATE())
+            `);
+
+            const checklistId = cabeceraResult.recordset[0].id;
+            const checklistNumber = cabeceraResult.recordset[0].checklistNumber;
+
+            for (const item of validacion.items) {
+                const detalleRequest = new sql.Request(transaction);
+                detalleRequest.input('checklistId', sql.BigInt, checklistId);
+                detalleRequest.input('visualCodigo', sql.VarChar(20), item.visualCodigo);
+                detalleRequest.input('desconforme', sql.Bit, item.desconforme);
+                detalleRequest.input('motivo', sql.VarChar(150), item.motivo);
+                await detalleRequest.query(`
+                    INSERT INTO EXHIBICION.TB_CHECKLIST_DETALLE
+                        (IN_checklist_id, VC_visual_codigo, BI_desconforme, VC_desconforme_motivo, IN_estado)
+                    VALUES (@checklistId, @visualCodigo, @desconforme, @motivo, 1)
+                `);
+            }
+
+            await transaction.commit();
+            res.status(201).json({ id: checklistId, checklistNumber });
+        } catch (txErr) {
+            await transaction.rollback().catch(() => {});
+            throw txErr;
+        }
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] crear checklist error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
