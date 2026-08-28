@@ -122,5 +122,18 @@
         "accion_guardar": "Save",
         "error_cargar_opciones": "Couldn't load the form options.",
         "error_guardar": "Couldn't create the exhibit."
+    },
+    "checklist_crear": {
+        "title": "New Checklist",
+        "campo_tienda": "Store",
+        "campo_sucursal": "Branch",
+        "campo_exhibicion": "Exhibit",
+        "conforme": "Compliant",
+        "no_conforme": "Non-Compliant",
+        "motivo_placeholder": "Reason...",
+        "accion_guardar": "Save",
+        "error_cargar": "Couldn't load the checklist.",
+        "error_guardar": "Couldn't create the checklist.",
+        "volver": "Back"
     }
 }

@@ -122,5 +122,18 @@
         "accion_guardar": "Guardar",
         "error_cargar_opciones": "No se pudieron cargar las opciones del formulario.",
         "error_guardar": "No se pudo crear la exhibición."
+    },
+    "checklist_crear": {
+        "title": "Nuevo Checklist",
+        "campo_tienda": "Tienda",
+        "campo_sucursal": "Sucursal",
+        "campo_exhibicion": "Exhibición",
+        "conforme": "Conforme",
+        "no_conforme": "No Conforme",
+        "motivo_placeholder": "Motivo...",
+        "accion_guardar": "Guardar",
+        "error_cargar": "No se pudo cargar el checklist.",
+        "error_guardar": "No se pudo crear el checklist.",
+        "volver": "Volver"
     }
 }
