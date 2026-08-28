@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Loader2, AlertCircle, Check, X } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
+import { useDialog } from '../context/DialogContext.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { cn } from '../utils/cn.js';
 import type { ExhibicionDetalle, ChecklistCatalogoResponse, ChecklistCatalogoCategoria, CrearChecklistInput, CrearChecklistResponse } from '../types/index.js';
@@ -16,6 +17,7 @@ export function ChecklistCrearPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { alert } = useDialog();
 
     const [exhibicion, setExhibicion] = useState<ExhibicionDetalle | null>(null);
     const [catalogo, setCatalogo] = useState<ChecklistCatalogoCategoria[] | null>(null);
@@ -26,7 +28,11 @@ export function ChecklistCrearPage() {
     const [guardando, setGuardando] = useState(false);
     const [errorGuardar, setErrorGuardar] = useState('');
 
-    useEffect(() => {
+    // Extraída para poder reintentar (botón "Reintentar" del estado de
+    // error) sin duplicar la lógica de carga inicial.
+    const cargar = useCallback(() => {
+        setLoading(true);
+        setError('');
         Promise.all([
             apiClient.get<ExhibicionDetalle>(`/exhibiciones/${id}`),
             apiClient.get<ChecklistCatalogoResponse>('/exhibiciones/catalogo-checklist'),
@@ -39,10 +45,16 @@ export function ChecklistCrearPage() {
             .finally(() => setLoading(false));
     }, [id, t]);
 
+    useEffect(() => { cargar(); }, [cargar]);
+
     const totalItems = useMemo(() => catalogo?.reduce((acc, cat) => acc + cat.items.length, 0) ?? 0, [catalogo]);
 
     const puedeGuardar = useMemo(() => {
-        if (!catalogo || Object.keys(respuestas).length !== totalItems) return false;
+        // totalItems === 0 no debería pasar en un catálogo sano, pero si
+        // el catálogo llega vacío (fila huérfana, tabla mal cargada) el
+        // `every` de abajo es vacuously true — sin este guard, "Guardar"
+        // quedaría habilitado para crear un checklist sin ítems.
+        if (!catalogo || totalItems === 0 || Object.keys(respuestas).length !== totalItems) return false;
         return !guardando && catalogo.every(cat => cat.items.every(item => {
             const r = respuestas[item.visualCodigo];
             if (!r) return false;
@@ -71,6 +83,10 @@ export function ChecklistCrearPage() {
                 return { visualCodigo: item.visualCodigo, desconforme: r.desconforme, motivo: r.desconforme ? r.motivo.trim() : null };
             }));
             await apiClient.post<CrearChecklistResponse>(`/exhibiciones/${id}/checklist`, { items } satisfies CrearChecklistInput);
+            // La exhibición-detalle no muestra checklists — sin esta
+            // confirmación, el usuario navega de vuelta sin ninguna señal
+            // de que el guardado realmente ocurrió.
+            await alert(t('checklist_crear.guardado_titulo'), t('checklist_crear.guardado_mensaje'));
             navigate(`/exhibiciones/${id}`, { viewTransition: true });
         } catch (err) {
             setErrorGuardar(err instanceof Error ? err.message : t('checklist_crear.error_guardar'));
@@ -111,8 +127,8 @@ export function ChecklistCrearPage() {
                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                 {error}
                             </div>
-                            <button type="button" onClick={volver} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' cursor-pointer'}>
-                                {t('checklist_crear.volver')}
+                            <button type="button" onClick={cargar} className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY + ' cursor-pointer'}>
+                                {t('checklist_crear.reintentar')}
                             </button>
                         </div>
                     )}

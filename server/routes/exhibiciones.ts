@@ -250,24 +250,37 @@ router.get('/catalogo-componentes', async (_req: Request, res: Response) => {
 // (VC_tabla='EXHIBICION_VISUAL'), agrupados en 3 categorías vía
 // dbo.PV_TABLA (VC_tabla='EXHIBICION_VISUAL_TIPO'), relacionadas por
 // EXHIBICION_VISUAL.VC_filtro = EXHIBICION_VISUAL_TIPO.IN_id — VC_filtro
-// se guarda como texto, de ahí el CONVERT(INT, ...) para que coincida
-// con el tipo TypeScript `tipoId: number`.
+// se guarda como texto, de ahí el TRY_CONVERT(INT, ...) para que coincida
+// con el tipo TypeScript `tipoId: number` (TRY_CONVERT en vez de CONVERT:
+// una fila con VC_filtro no numérico se descarta silenciosamente en vez
+// de tumbar el endpoint entero — igual que agruparCatalogoChecklist ya
+// descarta cualquier tipoId que no matchea ningún tipo activo).
+//
+// Compartida por GET /catalogo-checklist y POST /:id/checklist: ambos
+// deben ver EXACTAMENTE el mismo conjunto de ítems válidos. Antes, POST
+// armaba codigosValidos con una query propia sin este filtro/agrupación
+// — si algún día un ítem quedaba huérfano de categoría, el formulario
+// (que sí lo filtra) se volvía imposible de guardar sin diagnóstico.
+async function obtenerCategoriasChecklist(pool: sql.ConnectionPool) {
+    const [itemsResult, tiposResult] = await Promise.all([
+        pool.request().query(`
+            SELECT IN_id as visualId, VC_descripcion as nombre, TRY_CONVERT(INT, VC_filtro) as tipoId
+            FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
+            ORDER BY VC_filtro, IN_id
+        `),
+        pool.request().query(`
+            SELECT IN_id as tipoId, VC_descripcion as tipoNombre
+            FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL_TIPO' AND CH_activo = '1'
+            ORDER BY IN_id
+        `),
+    ]);
+    return agruparCatalogoChecklist(itemsResult.recordset, tiposResult.recordset);
+}
+
 router.get('/catalogo-checklist', async (_req: Request, res: Response) => {
     try {
         const pool = await getDbConnection();
-        const [itemsResult, tiposResult] = await Promise.all([
-            pool.request().query(`
-                SELECT IN_id as visualId, VC_descripcion as nombre, CONVERT(INT, VC_filtro) as tipoId
-                FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
-                ORDER BY VC_filtro, IN_id
-            `),
-            pool.request().query(`
-                SELECT IN_id as tipoId, VC_descripcion as tipoNombre
-                FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL_TIPO' AND CH_activo = '1'
-                ORDER BY IN_id
-            `),
-        ]);
-        res.json({ categorias: agruparCatalogoChecklist(itemsResult.recordset, tiposResult.recordset) });
+        res.json({ categorias: await obtenerCategoriasChecklist(pool) });
     } catch (err: unknown) {
         console.error('[Exhibiciones] catalogo-checklist error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
@@ -534,10 +547,8 @@ router.post('/:id/checklist', async (req: Request, res: Response) => {
             return;
         }
 
-        const codigosResult = await pool.request().query(`
-            SELECT IN_id as id FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
-        `);
-        const codigosValidos: string[] = codigosResult.recordset.map((r: { id: number }) => String(r.id));
+        const categorias = await obtenerCategoriasChecklist(pool);
+        const codigosValidos: string[] = categorias.flatMap(cat => cat.items.map(item => item.visualCodigo));
 
         const validacion = validarChecklistItems(req.body, codigosValidos);
         if (!validacion.valido) {
@@ -554,9 +565,19 @@ router.post('/:id/checklist', async (req: Request, res: Response) => {
             cabeceraRequest.input('exhibicionId', sql.BigInt, id);
             cabeceraRequest.input('usuario', sql.VarChar(50), usuario);
 
-            // WITH (UPDLOCK, HOLDLOCK) — mismo resguardo de carrera que el
-            // N° de exhibición: dos creaciones simultáneas en el mismo mes
-            // nunca deben generar el mismo IN_checklist_number.
+            // WITH (UPDLOCK, HOLDLOCK) resguarda contra colisiones ENTRE
+            // llamadas a este mismo endpoint — no contra la app móvil legacy
+            // (EXHIBICION.PROC_GUARDAR_CHECKLIST), que sigue en producción y
+            // lee el mismo MAX() sin ningún lock: un UPDLOCK es compatible
+            // con locks compartidos (S), así que ambos pueden leer el mismo
+            // MAX y generar el mismo N° si corren en la misma ventana.
+            // Confirmado en vivo durante el desarrollo de este plan (ver
+            // .superpowers/sdd/2026-08-27-checklist-crear/progress.md,
+            // checklist id 192 / 202608002, creado por la app vieja).
+            // Cerrar esto de forma definitiva requeriría una constraint
+            // UNIQUE en TB_CHECKLIST.IN_checklist_number — cambio de esquema
+            // en una tabla compartida en vivo con la app legacy, fuera de
+            // alcance sin decisión explícita del dueño del producto.
             const cabeceraResult = await cabeceraRequest.query(`
                 DECLARE @prefix INT = CONVERT(INT, CONCAT(YEAR(GETDATE()), RIGHT('00' + CONVERT(VARCHAR, MONTH(GETDATE())), 2), '000'))
                 DECLARE @sgte INT
@@ -574,21 +595,29 @@ router.post('/:id/checklist', async (req: Request, res: Response) => {
             const checklistId = cabeceraResult.recordset[0].id;
             const checklistNumber = cabeceraResult.recordset[0].checklistNumber;
 
-            for (const item of validacion.items) {
-                const detalleRequest = new sql.Request(transaction);
-                detalleRequest.input('checklistId', sql.BigInt, checklistId);
-                detalleRequest.input('visualCodigo', sql.VarChar(20), item.visualCodigo);
-                detalleRequest.input('desconforme', sql.Bit, item.desconforme);
-                detalleRequest.input('motivo', sql.VarChar(150), item.motivo);
-                await detalleRequest.query(`
-                    INSERT INTO EXHIBICION.TB_CHECKLIST_DETALLE
-                        (IN_checklist_id, VC_visual_codigo, BI_desconforme, VC_desconforme_motivo, IN_estado)
-                    VALUES (@checklistId, @visualCodigo, @desconforme, @motivo, 1)
-                `);
-            }
+            // Un solo INSERT multi-fila en vez de 12 round-trips secuenciales
+            // — el rango UPDLOCK/HOLDLOCK de arriba sigue vivo hasta el
+            // commit, y cada round-trip extra es tiempo de bloqueo extra
+            // sobre una tabla que la app legacy también escribe.
+            const detalleRequest = new sql.Request(transaction);
+            detalleRequest.input('checklistId', sql.BigInt, checklistId);
+            const filas = validacion.items.map((item, i) => {
+                detalleRequest.input(`visualCodigo${i}`, sql.VarChar(20), item.visualCodigo);
+                detalleRequest.input(`desconforme${i}`, sql.Bit, item.desconforme);
+                detalleRequest.input(`motivo${i}`, sql.VarChar(150), item.motivo);
+                return `(@checklistId, @visualCodigo${i}, @desconforme${i}, @motivo${i}, 1)`;
+            });
+            await detalleRequest.query(`
+                INSERT INTO EXHIBICION.TB_CHECKLIST_DETALLE
+                    (IN_checklist_id, VC_visual_codigo, BI_desconforme, VC_desconforme_motivo, IN_estado)
+                VALUES ${filas.join(', ')}
+            `);
 
             await transaction.commit();
-            res.status(201).json({ id: checklistId, checklistNumber });
+            // id llega como string del driver mssql (BIGINT OUTPUT) — mismo
+            // patrón ya conocido en el resto del código; se normaliza a
+            // number aquí para que coincida con CrearChecklistResponse.
+            res.status(201).json({ id: Number(checklistId), checklistNumber });
         } catch (txErr) {
             await transaction.rollback().catch(() => {});
             throw txErr;

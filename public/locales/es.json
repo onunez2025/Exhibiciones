@@ -134,6 +134,8 @@
         "accion_guardar": "Guardar",
         "error_cargar": "No se pudo cargar el checklist.",
         "error_guardar": "No se pudo crear el checklist.",
-        "volver": "Volver"
+        "reintentar": "Reintentar",
+        "guardado_titulo": "Checklist guardado",
+        "guardado_mensaje": "El checklist se registró correctamente."
     }
 }

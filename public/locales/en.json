@@ -134,6 +134,8 @@
         "accion_guardar": "Save",
         "error_cargar": "Couldn't load the checklist.",
         "error_guardar": "Couldn't create the checklist.",
-        "volver": "Back"
+        "reintentar": "Retry",
+        "guardado_titulo": "Checklist saved",
+        "guardado_mensaje": "The checklist was saved successfully."
     }
 }
