@@ -53,6 +53,7 @@
         "subtitle": "Lista de exhibiciones registradas",
         "search_placeholder": "N° Exhibición...",
         "acciones": "Acciones",
+        "accion_nueva": "Nueva",
         "filtros": "Filtros",
         "filtro_tipo": "Tipo de exhibición",
         "filtro_estado": "Estado",
@@ -98,6 +99,27 @@
         "volver_lista": "Volver a la lista",
         "sin_fotos": "No hay fotos registradas para esta exhibición.",
         "foto_principal": "Foto cuerpo entero",
-        "foto_componente": "Foto por componente"
+        "foto_componente": "Foto por componente",
+        "accion_agregar_carcasa": "Agregar Carcasa",
+        "accion_agregar_producto": "Agregar Producto",
+        "accion_agregar_foto": "Agregar Foto",
+        "accion_agregar": "Agregar",
+        "buscar_producto_placeholder": "Buscar...",
+        "sin_resultados": "Sin resultados.",
+        "error_cargar_catalogo": "No se pudo cargar el catálogo.",
+        "error_agregar_componente": "No se pudo agregar el componente.",
+        "error_agregar_foto": "No se pudo subir la foto."
+    },
+    "exhibicion_crear": {
+        "title": "Nueva Exhibición",
+        "subtitle": "Crea una exhibición nueva",
+        "campo_tienda": "Tienda",
+        "campo_sucursal": "Sucursal",
+        "campo_nombre": "Nombre de Exhibición",
+        "campo_nombre_placeholder": "Nombre",
+        "selecciona": "Selecciona...",
+        "accion_guardar": "Guardar",
+        "error_cargar_opciones": "No se pudieron cargar las opciones del formulario.",
+        "error_guardar": "No se pudo crear la exhibición."
     }
 }

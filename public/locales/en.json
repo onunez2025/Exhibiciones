@@ -53,6 +53,7 @@
         "subtitle": "List of registered exhibits",
         "search_placeholder": "Exhibit N°...",
         "acciones": "Actions",
+        "accion_nueva": "New",
         "filtros": "Filters",
         "filtro_tipo": "Exhibit type",
         "filtro_estado": "Status",
@@ -98,6 +99,27 @@
         "volver_lista": "Back to list",
         "sin_fotos": "No photos registered for this exhibit.",
         "foto_principal": "Full body photo",
-        "foto_componente": "Photo by component"
+        "foto_componente": "Photo by component",
+        "accion_agregar_carcasa": "Add Frame",
+        "accion_agregar_producto": "Add Product",
+        "accion_agregar_foto": "Add Photo",
+        "accion_agregar": "Add",
+        "buscar_producto_placeholder": "Search...",
+        "sin_resultados": "No results.",
+        "error_cargar_catalogo": "Couldn't load the catalog.",
+        "error_agregar_componente": "Couldn't add the component.",
+        "error_agregar_foto": "Couldn't upload the photo."
+    },
+    "exhibicion_crear": {
+        "title": "New Exhibit",
+        "subtitle": "Create a new exhibit",
+        "campo_tienda": "Store",
+        "campo_sucursal": "Branch",
+        "campo_nombre": "Exhibit Name",
+        "campo_nombre_placeholder": "Name",
+        "selecciona": "Select...",
+        "accion_guardar": "Save",
+        "error_cargar_opciones": "Couldn't load the form options.",
+        "error_guardar": "Couldn't create the exhibit."
     }
 }
