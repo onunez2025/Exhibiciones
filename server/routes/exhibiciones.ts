@@ -10,6 +10,7 @@ import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
 import { validarExhibicionCrear } from '../lib/exhibicionCrear.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { decodificarFotoBase64 } from '../lib/blobUpload.js';
+import { agruparCatalogoChecklist } from '../lib/checklistCatalogo.js';
 import { randomUUID } from 'crypto';
 import { logAudit } from '../middleware/auth.js';
 
@@ -240,6 +241,34 @@ router.get('/catalogo-componentes', async (_req: Request, res: Response) => {
         res.json({ productos: productos.recordset, carcasas: carcasas.recordset });
     } catch (err: unknown) {
         console.error('[Exhibiciones] catalogo-componentes error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+// Los 12 ítems fijos del checklist viven en dbo.PV_TABLA
+// (VC_tabla='EXHIBICION_VISUAL'), agrupados en 3 categorías vía
+// dbo.PV_TABLA (VC_tabla='EXHIBICION_VISUAL_TIPO'), relacionadas por
+// EXHIBICION_VISUAL.VC_filtro = EXHIBICION_VISUAL_TIPO.IN_id — VC_filtro
+// se guarda como texto, de ahí el CONVERT(INT, ...) para que coincida
+// con el tipo TypeScript `tipoId: number`.
+router.get('/catalogo-checklist', async (_req: Request, res: Response) => {
+    try {
+        const pool = await getDbConnection();
+        const [itemsResult, tiposResult] = await Promise.all([
+            pool.request().query(`
+                SELECT IN_id as visualId, VC_descripcion as nombre, CONVERT(INT, VC_filtro) as tipoId
+                FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
+                ORDER BY VC_filtro, IN_id
+            `),
+            pool.request().query(`
+                SELECT IN_id as tipoId, VC_descripcion as tipoNombre
+                FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_VISUAL_TIPO' AND CH_activo = '1'
+                ORDER BY IN_id
+            `),
+        ]);
+        res.json({ categorias: agruparCatalogoChecklist(itemsResult.recordset, tiposResult.recordset) });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] catalogo-checklist error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
