@@ -138,3 +138,33 @@ export interface AgregarFotoInput {
     contentType: string;
     esFotoPrincipal: boolean;
 }
+
+export interface ChecklistCatalogoItem {
+    visualCodigo: string;
+    nombre: string;
+}
+
+export interface ChecklistCatalogoCategoria {
+    tipoId: number;
+    tipoNombre: string;
+    items: ChecklistCatalogoItem[];
+}
+
+export interface ChecklistCatalogoResponse {
+    categorias: ChecklistCatalogoCategoria[];
+}
+
+export interface ChecklistItemInput {
+    visualCodigo: string;
+    desconforme: boolean;
+    motivo: string | null;
+}
+
+export interface CrearChecklistInput {
+    items: ChecklistItemInput[];
+}
+
+export interface CrearChecklistResponse {
+    id: number;
+    checklistNumber: number;
+}
