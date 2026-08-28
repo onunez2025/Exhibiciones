@@ -607,11 +607,20 @@ router.post('/:id/checklist', async (req: Request, res: Response) => {
                 detalleRequest.input(`motivo${i}`, sql.VarChar(150), item.motivo);
                 return `(@checklistId, @visualCodigo${i}, @desconforme${i}, @motivo${i}, 1)`;
             });
-            await detalleRequest.query(`
-                INSERT INTO EXHIBICION.TB_CHECKLIST_DETALLE
-                    (IN_checklist_id, VC_visual_codigo, BI_desconforme, VC_desconforme_motivo, IN_estado)
-                VALUES ${filas.join(', ')}
-            `);
+            // filas.length === 0 solo puede pasar si el catálogo activo
+            // está vacío (codigosValidos.length === 0) — un `VALUES` sin
+            // filas es un error de sintaxis SQL. El frontend ya bloquea
+            // guardar en ese caso, pero un llamado directo a la API no
+            // pasa por esa guarda: se preserva el comportamiento previo
+            // (checklist con cabecera pero sin líneas) en vez de que el
+            // endpoint truene con un 500.
+            if (filas.length > 0) {
+                await detalleRequest.query(`
+                    INSERT INTO EXHIBICION.TB_CHECKLIST_DETALLE
+                        (IN_checklist_id, VC_visual_codigo, BI_desconforme, VC_desconforme_motivo, IN_estado)
+                    VALUES ${filas.join(', ')}
+                `);
+            }
 
             await transaction.commit();
             // id llega como string del driver mssql (BIGINT OUTPUT) — mismo
