@@ -7,7 +7,7 @@ import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { DetallePrincipalTab } from '../components/exhibiciones/DetallePrincipalTab.js';
 import { DetalleComponentesTab } from '../components/exhibiciones/DetalleComponentesTab.js';
 import { DetalleFotosTab } from '../components/exhibiciones/DetalleFotosTab.js';
-import type { ExhibicionDetalle } from '../types/index.js';
+import type { ExhibicionDetalle, ExhibicionComponenteItem, ExhibicionFoto } from '../types/index.js';
 
 type TabKey = 'principal' | 'componentes' | 'fotos';
 
@@ -38,6 +38,20 @@ export function ExhibicionDetallePage() {
 
     const handleAprobado = (estadoId: 1 | 2) => {
         setDetalle(prev => (prev ? { ...prev, estadoId, canAprobar: estadoId === 1 } : prev));
+    };
+
+    const handleComponenteAgregado = (tipo: 1 | 2, item: ExhibicionComponenteItem) => {
+        setDetalle(prev => {
+            if (!prev) return prev;
+            const componentes = tipo === 1
+                ? { ...prev.componentes, productos: [...prev.componentes.productos, item] }
+                : { ...prev.componentes, carcasas: [...prev.componentes.carcasas, item] };
+            return { ...prev, componentes };
+        });
+    };
+
+    const handleFotoAgregada = (foto: ExhibicionFoto) => {
+        setDetalle(prev => (prev ? { ...prev, fotos: [...prev.fotos, foto] } : prev));
     };
 
     const volver = () => navigate('/exhibiciones', { viewTransition: true });
@@ -112,8 +126,17 @@ export function ExhibicionDetallePage() {
                             </div>
 
                             {tab === 'principal' && <DetallePrincipalTab detalle={detalle} onAprobado={handleAprobado} />}
-                            {tab === 'componentes' && <DetalleComponentesTab carcasas={detalle.componentes.carcasas} productos={detalle.componentes.productos} />}
-                            {tab === 'fotos' && <DetalleFotosTab fotos={detalle.fotos} />}
+                            {tab === 'componentes' && (
+                                <DetalleComponentesTab
+                                    exhibicionId={detalle.id}
+                                    carcasas={detalle.componentes.carcasas}
+                                    productos={detalle.componentes.productos}
+                                    onComponenteAgregado={handleComponenteAgregado}
+                                />
+                            )}
+                            {tab === 'fotos' && (
+                                <DetalleFotosTab exhibicionId={detalle.id} fotos={detalle.fotos} onFotoAgregada={handleFotoAgregada} />
+                            )}
                         </>
                     )}
                 </div>
