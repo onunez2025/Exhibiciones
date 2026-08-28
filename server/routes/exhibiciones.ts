@@ -64,13 +64,14 @@ router.get('/opciones-crear', async (_req: Request, res: Response) => {
         const [{ tipos, pisoDetalles }, tiendasResult] = await Promise.all([
             obtenerCatalogosPvTabla(pool),
             pool.request().query(`
-                SELECT DISTINCT
-                    VC_cliente_codigo as clienteCodigo, VC_cliente_nombre as clienteNombre,
-                    VC_sucursal_codigo as sucursalCodigo, VC_sucursal_nombre as sucursalNombre,
-                    VC_direccion as direccion
+                SELECT
+                    VC_cliente_codigo as clienteCodigo, MAX(VC_cliente_nombre) as clienteNombre,
+                    VC_sucursal_codigo as sucursalCodigo, MAX(VC_sucursal_nombre) as sucursalNombre,
+                    MAX(VC_direccion) as direccion
                 FROM EXHIBICION.TB_EXHIBICION
                 WHERE VC_cliente_codigo IS NOT NULL AND VC_sucursal_codigo IS NOT NULL
-                ORDER BY VC_cliente_nombre, VC_sucursal_nombre
+                GROUP BY VC_cliente_codigo, VC_sucursal_codigo
+                ORDER BY MAX(VC_cliente_nombre), MAX(VC_sucursal_nombre)
             `),
         ]);
         res.json({ tiendas: tiendasResult.recordset, tipos, pisoDetalles });
@@ -211,7 +212,7 @@ router.post('/', async (req: Request, res: Response) => {
             const row = result.recordset[0];
             res.status(201).json({ id: row.id, nroExhibicion: row.nroExhibicion });
         } catch (txErr) {
-            await transaction.rollback();
+            await transaction.rollback().catch(() => {});
             throw txErr;
         }
     } catch (err: unknown) {
@@ -443,7 +444,7 @@ router.post('/:id/fotos', async (req: Request, res: Response) => {
         const blobSasToken = cleanEnv('BLOB_SAS_TOKEN');
         const nombreArchivo = `${randomUUID()}${resultado.foto.extension}`;
 
-        const uploadRes = await fetch(`${blobContainerUrl}/${nombreArchivo}?${blobSasToken}`, {
+        const uploadRes = await fetch(buildFotoUrl(blobContainerUrl, blobSasToken, nombreArchivo), {
             method: 'PUT',
             headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': contentType },
             body: resultado.foto.buffer,

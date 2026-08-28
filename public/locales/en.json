@@ -108,7 +108,8 @@
         "sin_resultados": "No results.",
         "error_cargar_catalogo": "Couldn't load the catalog.",
         "error_agregar_componente": "Couldn't add the component.",
-        "error_agregar_foto": "Couldn't upload the photo."
+        "error_agregar_foto": "Couldn't upload the photo.",
+        "error_foto_grande": "The photo is too large (max 8MB)."
     },
     "exhibicion_crear": {
         "title": "New Exhibit",

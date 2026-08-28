@@ -60,6 +60,11 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
         e.target.value = ''; // permite volver a elegir el mismo archivo después
         if (!file) return;
 
+        if (file.size > 8 * 1024 * 1024) {
+            setError(t('exhibicion_detalle.error_foto_grande'));
+            return;
+        }
+
         setSubiendo(true);
         setError('');
         try {
@@ -80,7 +85,7 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
     return (
         <div className="space-y-4">
             <div>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleArchivoSeleccionado} className="hidden" />
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleArchivoSeleccionado} className="hidden" />
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
