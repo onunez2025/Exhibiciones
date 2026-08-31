@@ -1274,7 +1274,7 @@ git commit -m "feat: i18n keys for creating a ticket (es/en)"
 - [ ] **Step 1: Run the full test suite**
 
 Run: `npx vitest run`
-Expected: all test files pass, including the new suite from Task 1 (13 new tests on top of the existing 100 → 113 total).
+Expected: all test files pass, including the new suite from Task 1 (12 new tests on top of the existing 100 → 112 total).
 
 - [ ] **Step 2: Type-check and build**
 
