@@ -197,4 +197,75 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/:id/atender', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de checklist inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_CHECKLIST
+                SET IN_estado_id = 2,
+                    VC_usuario_atendido = @usuario,
+                    VC_fecha_atendido = GETDATE()
+                WHERE IN_checklist_id = @id AND IN_estado_id = 1
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            const existsResult = await pool.request()
+                .input('id', sql.BigInt, id)
+                .query('SELECT IN_estado_id as estadoId FROM EXHIBICION.TB_CHECKLIST WHERE IN_checklist_id = @id');
+            if (existsResult.recordset.length === 0 || existsResult.recordset[0].estadoId === 0) {
+                res.status(404).json({ error: 'Checklist no encontrado.' });
+            } else {
+                res.status(409).json({ error: 'El checklist ya no se encuentra pendiente de atención.' });
+            }
+            return;
+        }
+
+        res.json({ estadoId: 2 });
+    } catch (err: unknown) {
+        console.error('[Checklists] atender error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.post('/:id/anular', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de checklist inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_CHECKLIST
+                SET IN_estado_id = 0,
+                    VC_usuario_modi = @usuario,
+                    DT_fecha_modi = GETDATE()
+                WHERE IN_checklist_id = @id AND IN_estado_id > 0
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            res.status(404).json({ error: 'Checklist no encontrado o ya anulado.' });
+            return;
+        }
+
+        res.json({ estadoId: 0 });
+    } catch (err: unknown) {
+        console.error('[Checklists] anular error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 export default router;
