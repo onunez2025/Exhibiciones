@@ -163,5 +163,33 @@
         "guardado_titulo": "Ticket saved",
         "guardado_mensaje": "Ticket {{numero}} was saved successfully.",
         "ticket_creado": "Ticket {{numero}} created — you can keep adding photos or finish."
+    },
+    "checklist_bandeja": {
+        "title": "Checklists",
+        "subtitle": "Inbox of recorded checklists",
+        "detalle_title": "Checklist Detail",
+        "filtros": "Filters",
+        "search_placeholder": "Search by checklist # or exhibit...",
+        "filtro_todos": "All",
+        "filtro_conformidad": "Compliance",
+        "filtro_tienda": "Store / Branch",
+        "filtro_tienda_placeholder": "Store or branch name...",
+        "filtro_fecha_desde": "From",
+        "filtro_fecha_hasta": "To",
+        "filtro_aplicar": "Apply",
+        "filtro_limpiar": "Clear",
+        "conforme": "Compliant",
+        "no_conforme": "Non-Compliant",
+        "estado_pendiente": "Pending",
+        "estado_atendido": "Resolved",
+        "campo_tienda": "Store",
+        "campo_sucursal": "Branch",
+        "campo_exhibicion": "Exhibit",
+        "campo_motivo": "Reason",
+        "accion_ver": "View detail",
+        "error_cargar": "Couldn't load checklists.",
+        "error_cargar_detalle": "Couldn't load checklist detail.",
+        "reintentar": "Retry",
+        "vacio": "No checklists found."
     }
 }

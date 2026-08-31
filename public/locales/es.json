@@ -163,5 +163,33 @@
         "guardado_titulo": "Ticket guardado",
         "guardado_mensaje": "El ticket {{numero}} se registró correctamente.",
         "ticket_creado": "Ticket {{numero}} creado — puedes seguir agregando fotos o finalizar."
+    },
+    "checklist_bandeja": {
+        "title": "Checklists",
+        "subtitle": "Bandeja de checklists registrados",
+        "detalle_title": "Detalle de Checklist",
+        "filtros": "Filtros",
+        "search_placeholder": "Buscar por N° checklist o exhibición...",
+        "filtro_todos": "Todos",
+        "filtro_conformidad": "Conformidad",
+        "filtro_tienda": "Tienda / Sucursal",
+        "filtro_tienda_placeholder": "Nombre de tienda o sucursal...",
+        "filtro_fecha_desde": "Desde",
+        "filtro_fecha_hasta": "Hasta",
+        "filtro_aplicar": "Aplicar",
+        "filtro_limpiar": "Limpiar",
+        "conforme": "Conforme",
+        "no_conforme": "No Conforme",
+        "estado_pendiente": "Pendiente",
+        "estado_atendido": "Atendido",
+        "campo_tienda": "Tienda",
+        "campo_sucursal": "Sucursal",
+        "campo_exhibicion": "Exhibición",
+        "campo_motivo": "Motivo",
+        "accion_ver": "Ver detalle",
+        "error_cargar": "No se pudieron cargar los checklists.",
+        "error_cargar_detalle": "No se pudo cargar el detalle del checklist.",
+        "reintentar": "Reintentar",
+        "vacio": "No se encontraron checklists registrados."
     }
 }
