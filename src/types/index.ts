@@ -203,3 +203,57 @@ export interface TicketFoto {
     id: number;
     url: string;
 }
+
+export interface ChecklistListItem {
+    id: number;
+    checklistNumber: number;
+    exhibicionId: number;
+    exhibicionNroExhibicion: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    sucursalNombre: string;
+    estadoId: number;
+    conforme: boolean;
+    fechaCrea: string;
+}
+
+export interface ChecklistsListResponse {
+    items: ChecklistListItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
+export interface ChecklistsFiltros {
+    conforme?: 'si' | 'no';
+    tienda?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+}
+
+export interface ChecklistDetalleItem {
+    visualCodigo: string;
+    nombre: string;
+    desconforme: boolean;
+    motivo: string | null;
+}
+
+export interface ChecklistDetalleCategoria {
+    tipoId: number;
+    tipoNombre: string;
+    items: ChecklistDetalleItem[];
+}
+
+export interface ChecklistDetalle {
+    id: number;
+    checklistNumber: number;
+    exhibicionId: number;
+    exhibicionNroExhibicion: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    sucursalNombre: string;
+    estadoId: number;
+    conforme: boolean;
+    fechaCrea: string;
+    categorias: ChecklistDetalleCategoria[];
+}
