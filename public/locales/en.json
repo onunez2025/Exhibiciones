@@ -137,5 +137,30 @@
         "reintentar": "Retry",
         "guardado_titulo": "Checklist saved",
         "guardado_mensaje": "The checklist was saved successfully."
+    },
+    "ticket_crear": {
+        "title": "New Ticket",
+        "tab_principal": "Main",
+        "tab_componentes": "Components",
+        "tab_fotos": "Photos",
+        "campo_tienda": "Store",
+        "campo_sucursal": "Branch",
+        "campo_exhibicion": "Exhibit",
+        "campo_tipo": "Ticket Type",
+        "campo_motivo": "Reason",
+        "motivo_placeholder": "Describe the reason for this ticket...",
+        "selecciona": "Select...",
+        "sin_componentes": "This exhibit has no registered components.",
+        "accion_agregar_foto": "Add Photo",
+        "sin_fotos": "No photos added yet.",
+        "accion_guardar": "Save",
+        "accion_finalizar": "Finish",
+        "error_cargar": "Couldn't load the form.",
+        "error_guardar": "Couldn't create the ticket.",
+        "error_agregar_foto": "Couldn't upload the photo.",
+        "error_foto_grande": "The photo is too large (8MB max).",
+        "reintentar": "Retry",
+        "guardado_titulo": "Ticket saved",
+        "guardado_mensaje": "Ticket {{numero}} was saved successfully."
     }
 }

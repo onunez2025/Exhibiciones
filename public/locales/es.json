@@ -137,5 +137,30 @@
         "reintentar": "Reintentar",
         "guardado_titulo": "Checklist guardado",
         "guardado_mensaje": "El checklist se registró correctamente."
+    },
+    "ticket_crear": {
+        "title": "Nuevo Ticket",
+        "tab_principal": "Principal",
+        "tab_componentes": "Componentes",
+        "tab_fotos": "Fotos",
+        "campo_tienda": "Tienda",
+        "campo_sucursal": "Sucursal",
+        "campo_exhibicion": "Exhibición",
+        "campo_tipo": "Tipo de Ticket",
+        "campo_motivo": "Motivo",
+        "motivo_placeholder": "Describe el motivo del ticket...",
+        "selecciona": "Selecciona...",
+        "sin_componentes": "Esta exhibición no tiene componentes registrados.",
+        "accion_agregar_foto": "Agregar Foto",
+        "sin_fotos": "No se han agregado fotos.",
+        "accion_guardar": "Guardar",
+        "accion_finalizar": "Finalizar",
+        "error_cargar": "No se pudo cargar el formulario.",
+        "error_guardar": "No se pudo crear el ticket.",
+        "error_agregar_foto": "No se pudo subir la foto.",
+        "error_foto_grande": "La foto es demasiado grande (máximo 8MB).",
+        "reintentar": "Reintentar",
+        "guardado_titulo": "Ticket guardado",
+        "guardado_mensaje": "El ticket {{numero}} se registró correctamente."
     }
 }
