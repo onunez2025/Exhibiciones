@@ -12,6 +12,7 @@ import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { decodificarFotoBase64 } from '../lib/blobUpload.js';
 import { agruparCatalogoChecklist } from '../lib/checklistCatalogo.js';
 import { validarChecklistItems } from '../lib/checklistCrear.js';
+import { validarTicketCrear } from '../lib/ticketCrear.js';
 import { randomUUID } from 'crypto';
 import { logAudit } from '../middleware/auth.js';
 
@@ -653,6 +654,168 @@ router.post('/:id/checklist', async (req: Request, res: Response) => {
         }
     } catch (err: unknown) {
         console.error('[Exhibiciones] crear checklist error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.post('/:id/tickets', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        const exhibicionResult = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT VC_cliente_codigo as clienteCodigo, VC_sucursal_codigo as sucursalCodigo, VC_cliente_nombre as clienteNombre
+            FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id
+        `);
+        const exhibicion = exhibicionResult.recordset[0];
+        if (!exhibicion) {
+            res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+
+        const tiposResult = await pool.request().query(`
+            SELECT IN_tipo_id as id FROM EXHIBICION.TB_TIPOS_REQUERIMIENTO WHERE BI_activo = 1
+        `);
+        const tiposValidos: number[] = tiposResult.recordset.map((r: { id: number }) => r.id);
+
+        const componentesResult = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT IN_exhibicion_componente_id as id
+            FROM EXHIBICION.TB_EXHIBICION_COMPONENTE WHERE IN_exhibicion_id = @id AND IN_estado = 1
+        `);
+        // Number(...) explícito: IN_exhibicion_componente_id es BIGINT — el
+        // driver mssql lo devuelve como string aunque el tipo TS diga
+        // number. Sin esto, validarTicketCrear compararía un number (del
+        // body ya parseado) contra strings y rechazaría TODO componente
+        // válido (mismo patrón de bug ya conocido, ver progress.md de
+        // checklist-crear).
+        const componentesValidos: number[] = componentesResult.recordset.map((r: { id: number }) => Number(r.id));
+
+        const validacion = validarTicketCrear(req.body, tiposValidos, componentesValidos);
+        if (!validacion.valido) {
+            res.status(400).json({ error: validacion.error });
+            return;
+        }
+        const { tipoId, motivo, componentes } = validacion.datos;
+
+        const usuario = req.user?.username ?? 'system';
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const cabeceraRequest = new sql.Request(transaction);
+            cabeceraRequest.input('exhibicionId', sql.BigInt, id);
+            cabeceraRequest.input('tipoId', sql.Int, tipoId);
+            cabeceraRequest.input('motivo', sql.VarChar(200), motivo);
+            cabeceraRequest.input('clienteCodigo', sql.VarChar(10), exhibicion.clienteCodigo);
+            cabeceraRequest.input('sucursalCodigo', sql.VarChar(10), exhibicion.sucursalCodigo);
+            cabeceraRequest.input('clienteNombre', sql.VarChar(120), exhibicion.clienteNombre);
+            cabeceraRequest.input('usuario', sql.VarChar(20), usuario);
+
+            // WITH (UPDLOCK, HOLDLOCK): resguarda contra colisiones ENTRE
+            // llamadas a este mismo endpoint. A diferencia del N° de
+            // checklist, este es un contador GLOBAL (nunca se reinicia por
+            // mes) — mismo esquema que ya usaba el proc legacy
+            // PROC_GUARDAR_WEB_MARKETING_REQUERIMIENTO. Esa tabla lleva sin
+            // actividad desde 2023-12-01 (confirmado en la spec): hoy no hay
+            // ningún escritor legacy vivo compitiendo por este número, a
+            // diferencia del caso de checklist.
+            const cabeceraResult = await cabeceraRequest.query(`
+                DECLARE @sgte INT
+                SELECT @sgte = ISNULL(MAX(CONVERT(INT, SUBSTRING(VC_requerimiento, 4, 99))), 0) + 1
+                FROM EXHIBICION.WEB_MARKETING_REQUERIMIENTO WITH (UPDLOCK, HOLDLOCK)
+                WHERE SUBSTRING(VC_requerimiento, 1, 3) = 'RSM'
+
+                DECLARE @numero VARCHAR(10) = 'RSM' + RIGHT('0000000' + CONVERT(VARCHAR, @sgte), 7)
+
+                INSERT INTO EXHIBICION.WEB_MARKETING_REQUERIMIENTO
+                    (VC_organizacion, VC_sociedad, VC_requerimiento, IN_exhibicion_id, IN_tipo_rq_id,
+                     VC_observacion, VC_estado, CH_anulado, CH_ticket,
+                     VC_cliente_codigo, VC_cliente_sucursal, VC_cliente_nombre,
+                     IN_capacparticipantes, VC_usuario_crea, DT_fecha_crea)
+                OUTPUT INSERTED.VC_requerimiento as numero
+                VALUES
+                    ('1301', '1300', @numero, @exhibicionId, @tipoId,
+                     @motivo, '01', 'N', 'W',
+                     @clienteCodigo, @sucursalCodigo, @clienteNombre,
+                     0, @usuario, GETDATE())
+            `);
+
+            const numero: string = cabeceraResult.recordset[0].numero;
+
+            const histRequest = new sql.Request(transaction);
+            histRequest.input('numero', sql.VarChar(10), numero);
+            histRequest.input('usuario', sql.VarChar(50), usuario);
+            histRequest.input('nombre', sql.VarChar(150), usuario);
+            await histRequest.query(`
+                INSERT INTO EXHIBICION.WEB_MARKETING_REQUERIMIENTO_HIST (VC_requerimiento, VC_usuario, VC_nombre, VC_estado, VC_observacion)
+                VALUES (@numero, @usuario, @nombre, '01', NULL)
+            `);
+
+            if (componentes.length > 0) {
+                // Busca código/nombre/tipo real por componenteId — nunca se
+                // confía en lo que mande el cliente (Global Constraint).
+                const lookupRequest = new sql.Request(transaction);
+                const placeholders = componentes.map((c, i) => {
+                    lookupRequest.input(`compId${i}`, sql.BigInt, c.componenteId);
+                    return `@compId${i}`;
+                });
+                const lookupResult = await lookupRequest.query(`
+                    SELECT
+                        C.IN_exhibicion_componente_id as componenteId,
+                        C.IN_tipo as tipo,
+                        C.VC_codigo_producto as codigo,
+                        P.VC_articulo_nombre2 as nombre
+                    FROM EXHIBICION.TB_EXHIBICION_COMPONENTE C
+                    LEFT JOIN EXHIBICION.WEB_MARKETING_PRODUCTOS P
+                        ON P.VC_articulo_codigo = C.VC_codigo_producto
+                        AND P.VC_tipo = CASE C.IN_tipo WHEN 1 THEN 'PRD' WHEN 2 THEN 'CAR' END
+                    WHERE C.IN_exhibicion_componente_id IN (${placeholders.join(', ')})
+                `);
+                // Number(...) explícito por el mismo motivo que arriba —
+                // IN_exhibicion_componente_id vuelve a llegar como BIGINT.
+                const porId = new Map(lookupResult.recordset.map((r: { componenteId: number; tipo: number; codigo: string; nombre: string | null }) => [Number(r.componenteId), r]));
+
+                const detalleRequest = new sql.Request(transaction);
+                detalleRequest.input('numero', sql.VarChar(10), numero);
+                detalleRequest.input('usuario', sql.VarChar(20), usuario);
+                const filas = componentes.map((c, i) => {
+                    const info = porId.get(c.componenteId);
+                    const articuloTipo = info?.tipo === 1 ? 'PRD' : 'CAR';
+                    detalleRequest.input(`articuloTipo${i}`, sql.VarChar(3), articuloTipo);
+                    detalleRequest.input(`articuloCodigo${i}`, sql.VarChar(20), info?.codigo ?? '');
+                    detalleRequest.input(`articuloNombre${i}`, sql.VarChar(120), info?.nombre ?? '');
+                    detalleRequest.input(`cantidad${i}`, sql.Int, c.cantidad);
+                    return `('1301', @numero, 'E', '', '1301', '', @articuloTipo${i}, @articuloCodigo${i}, @articuloNombre${i}, 'UNI', @cantidad${i}, 'A', @usuario, GETDATE())`;
+                });
+                // VC_organizacion es NOT NULL sin default en esta tabla (a
+                // diferencia de las demás columnas NOT NULL, que sí lo
+                // tienen) — confirmado contra INFORMATION_SCHEMA.COLUMNS
+                // durante la verificación manual de esta tarea; el primer
+                // intento sin esta columna falló con "Cannot insert the
+                // value NULL into column 'VC_organizacion'". Mismo
+                // constante fija '1301' que en la cabecera.
+                await detalleRequest.query(`
+                    INSERT INTO EXHIBICION.WEB_MARKETING_REQUERIMIENTO_DETALLE
+                        (VC_organizacion, VC_requerimiento, VC_tipo, VC_posicion, VC_centro, VC_almacen,
+                         VC_articulo_tipo, VC_articulo_codigo, VC_articulo_nombre, VC_articulo_um,
+                         IN_articulo_cantidad, CH_estado, VC_usuario_crea, DT_fecha_crea)
+                    VALUES ${filas.join(', ')}
+                `);
+            }
+
+            await transaction.commit();
+            res.status(201).json({ numero });
+        } catch (txErr) {
+            await transaction.rollback().catch(() => {});
+            throw txErr;
+        }
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] crear ticket error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
