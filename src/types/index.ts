@@ -168,3 +168,38 @@ export interface CrearChecklistResponse {
     id: number;
     checklistNumber: number;
 }
+
+export interface TipoTicketOpcion {
+    id: number;
+    codigo: string;
+    nombre: string;
+}
+
+export interface TiposTicketResponse {
+    tipos: TipoTicketOpcion[];
+}
+
+export interface TicketComponenteInput {
+    componenteId: number;
+    cantidad: number;
+}
+
+export interface CrearTicketInput {
+    tipoId: number;
+    motivo: string;
+    componentes: TicketComponenteInput[];
+}
+
+export interface CrearTicketResponse {
+    numero: string;
+}
+
+export interface AgregarFotoTicketInput {
+    archivoBase64: string;
+    contentType: string;
+}
+
+export interface TicketFoto {
+    id: number;
+    url: string;
+}
