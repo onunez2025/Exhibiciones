@@ -187,8 +187,18 @@
         "campo_exhibicion": "Exhibit",
         "campo_motivo": "Reason",
         "accion_ver": "View detail",
+        "accion_atender": "Mark as Resolved",
+        "accion_anular": "Cancel Checklist",
+        "confirmar_atender_titulo": "Mark as Resolved?",
+        "confirmar_atender_mensaje": "Do you want to mark this checklist as resolved and reviewed?",
+        "confirmar_anular_titulo": "Cancel Checklist?",
+        "confirmar_anular_mensaje": "Are you sure you want to cancel this checklist? This action cannot be undone.",
+        "atendido_exito": "Checklist marked as resolved.",
+        "anulado_exito": "Checklist canceled successfully.",
         "error_cargar": "Couldn't load checklists.",
         "error_cargar_detalle": "Couldn't load checklist detail.",
+        "error_atender": "Couldn't update checklist status.",
+        "error_anular": "Couldn't cancel checklist.",
         "reintentar": "Retry",
         "vacio": "No checklists found."
     }

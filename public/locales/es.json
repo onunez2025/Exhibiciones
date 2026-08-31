@@ -187,8 +187,18 @@
         "campo_exhibicion": "Exhibición",
         "campo_motivo": "Motivo",
         "accion_ver": "Ver detalle",
+        "accion_atender": "Marcar como Atendido",
+        "accion_anular": "Anular Checklist",
+        "confirmar_atender_titulo": "¿Marcar como Atendido?",
+        "confirmar_atender_mensaje": "¿Deseas marcar este checklist como atendido y revisado?",
+        "confirmar_anular_titulo": "¿Anular Checklist?",
+        "confirmar_anular_mensaje": "¿Estás seguro de que deseas anular este checklist? Esta acción no se puede deshacer.",
+        "atendido_exito": "El checklist ha sido marcado como atendido.",
+        "anulado_exito": "El checklist ha sido anulado correctamente.",
         "error_cargar": "No se pudieron cargar los checklists.",
         "error_cargar_detalle": "No se pudo cargar el detalle del checklist.",
+        "error_atender": "No se pudo actualizar el estado del checklist.",
+        "error_anular": "No se pudo anular el checklist.",
         "reintentar": "Reintentar",
         "vacio": "No se encontraron checklists registrados."
     }
