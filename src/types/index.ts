@@ -257,3 +257,12 @@ export interface ChecklistDetalle {
     fechaCrea: string;
     categorias: ChecklistDetalleCategoria[];
 }
+
+export interface AtenderChecklistResponse {
+    estadoId: 2;
+}
+
+export interface AnularChecklistResponse {
+    estadoId: 0;
+}
+
