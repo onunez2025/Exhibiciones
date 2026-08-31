@@ -145,15 +145,15 @@ router.get('/:id', async (req: Request, res: Response) => {
 
         const [itemsResult, tiposResult, detalleResult] = await Promise.all([
             pool.request().query(`
-                SELECT IN_id as visualId, VC_descripcion as nombre, IN_padre_id as tipoId
+                SELECT IN_id as visualId, VC_descripcion as nombre, TRY_CONVERT(INT, VC_filtro) as tipoId
                 FROM dbo.PV_TABLA
-                WHERE VC_tabla = 'VISUAL' AND CH_activo = '1' AND IN_id > 0
-                ORDER BY IN_padre_id, IN_id
+                WHERE VC_tabla = 'EXHIBICION_VISUAL' AND CH_activo = '1'
+                ORDER BY VC_filtro, IN_id
             `),
             pool.request().query(`
                 SELECT IN_id as tipoId, VC_descripcion as tipoNombre
                 FROM dbo.PV_TABLA
-                WHERE VC_tabla = 'TIPO_VISUAL' AND CH_activo = '1'
+                WHERE VC_tabla = 'EXHIBICION_VISUAL_TIPO' AND CH_activo = '1'
                 ORDER BY IN_id
             `),
             pool.request().input('id', sql.BigInt, id).query(`
