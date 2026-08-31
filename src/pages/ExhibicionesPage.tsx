@@ -115,6 +115,10 @@ export function ExhibicionesPage() {
             navigate(`/exhibiciones/${id}/checklist/nueva`, { viewTransition: true });
             return;
         }
+        if (action === 'ticket') {
+            navigate(`/exhibiciones/${id}/tickets/nuevo`, { viewTransition: true });
+            return;
+        }
         alert(t('exhibiciones_lista.proximamente_titulo'), t('exhibiciones_lista.proximamente_mensaje'));
     };
 
