@@ -161,6 +161,7 @@
         "error_foto_grande": "The photo is too large (8MB max).",
         "reintentar": "Retry",
         "guardado_titulo": "Ticket saved",
-        "guardado_mensaje": "Ticket {{numero}} was saved successfully."
+        "guardado_mensaje": "Ticket {{numero}} was saved successfully.",
+        "ticket_creado": "Ticket {{numero}} created — you can keep adding photos or finish."
     }
 }

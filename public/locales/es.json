@@ -161,6 +161,7 @@
         "error_foto_grande": "La foto es demasiado grande (máximo 8MB).",
         "reintentar": "Reintentar",
         "guardado_titulo": "Ticket guardado",
-        "guardado_mensaje": "El ticket {{numero}} se registró correctamente."
+        "guardado_mensaje": "El ticket {{numero}} se registró correctamente.",
+        "ticket_creado": "Ticket {{numero}} creado — puedes seguir agregando fotos o finalizar."
     }
 }

@@ -213,6 +213,19 @@ export function TicketCrearPage() {
                                 ))}
                             </div>
 
+                            {numero && (
+                                <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-400/30 text-emerald-700 text-sm font-semibold">
+                                    <span>{t('ticket_crear.ticket_creado', { numero })}</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleFinalizar}
+                                        className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY + ' cursor-pointer shrink-0'}
+                                    >
+                                        {t('ticket_crear.accion_finalizar')}
+                                    </button>
+                                </div>
+                            )}
+
                             {tab === 'principal' && (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-3 p-4 bg-card border border-cb-border rounded-xl">
@@ -258,7 +271,7 @@ export function TicketCrearPage() {
                                         </div>
                                     )}
 
-                                    {!numero ? (
+                                    {!numero && (
                                         <button
                                             type="button"
                                             onClick={handleGuardar}
@@ -267,14 +280,6 @@ export function TicketCrearPage() {
                                         >
                                             {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
                                             {t('ticket_crear.accion_guardar')}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={handleFinalizar}
-                                            className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY + ' w-full sm:w-auto cursor-pointer'}
-                                        >
-                                            {t('ticket_crear.accion_finalizar')}
                                         </button>
                                     )}
                                 </div>
@@ -292,6 +297,7 @@ export function TicketCrearPage() {
                                                     <input
                                                         type="number"
                                                         min={0}
+                                                        step={1}
                                                         disabled={numero !== null}
                                                         value={cantidades[item.id] ?? ''}
                                                         onChange={(e) => setCantidades(prev => ({ ...prev, [item.id]: e.target.value }))}

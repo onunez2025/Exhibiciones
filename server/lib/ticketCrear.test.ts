@@ -73,6 +73,8 @@ describe('validarTicketCrear', () => {
             .toEqual({ valido: false, error: 'La cantidad debe ser un número entero mayor a 0.' });
         expect(validarTicketCrear(body({ componentes: [{ componenteId: 101, cantidad: 1.5 }] }), TIPOS, COMPONENTES))
             .toEqual({ valido: false, error: 'La cantidad debe ser un número entero mayor a 0.' });
+        expect(validarTicketCrear(body({ componentes: [{ componenteId: 101, cantidad: -1 }] }), TIPOS, COMPONENTES))
+            .toEqual({ valido: false, error: 'La cantidad debe ser un número entero mayor a 0.' });
     });
 
     it('rejects componentes that is not an array', () => {
