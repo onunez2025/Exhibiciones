@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Loader2, AlertCircle, Check, X } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, Check, X, CheckCircle2, Trash2 } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
+import { useDialog } from '../context/DialogContext.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { cn } from '../utils/cn.js';
 import {
@@ -11,16 +12,19 @@ import {
     getConformeEstilo,
     getConformeLabelKey,
 } from '../utils/estadoChecklist.js';
-import type { ChecklistDetalle } from '../types/index.js';
+import type { ChecklistDetalle, AtenderChecklistResponse, AnularChecklistResponse } from '../types/index.js';
 
 export function ChecklistDetallePage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { alert, confirm } = useDialog();
 
     const [checklist, setChecklist] = useState<ChecklistDetalle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [atendiendo, setAtendiendo] = useState(false);
+    const [anulando, setAnulando] = useState(false);
 
     const cargar = useCallback(() => {
         setLoading(true);
@@ -34,6 +38,46 @@ export function ChecklistDetallePage() {
     useEffect(() => { cargar(); }, [cargar]);
 
     const volver = () => navigate('/checklist', { viewTransition: true });
+
+    const handleAtender = async () => {
+        const ok = await confirm({
+            title: t('checklist_bandeja.confirmar_atender_titulo'),
+            message: t('checklist_bandeja.confirmar_atender_mensaje'),
+            variant: 'primary',
+        });
+        if (!ok) return;
+
+        setAtendiendo(true);
+        try {
+            await apiClient.post<AtenderChecklistResponse>(`/checklists/${id}/atender`);
+            setChecklist(prev => prev ? { ...prev, estadoId: 2 } : prev);
+            await alert(t('checklist_bandeja.title'), t('checklist_bandeja.atendido_exito'));
+        } catch (err) {
+            await alert(t('checklist_bandeja.title'), err instanceof Error ? err.message : t('checklist_bandeja.error_atender'));
+        } finally {
+            setAtendiendo(false);
+        }
+    };
+
+    const handleAnular = async () => {
+        const ok = await confirm({
+            title: t('checklist_bandeja.confirmar_anular_titulo'),
+            message: t('checklist_bandeja.confirmar_anular_mensaje'),
+            variant: 'danger',
+        });
+        if (!ok) return;
+
+        setAnulando(true);
+        try {
+            await apiClient.post<AnularChecklistResponse>(`/checklists/${id}/anular`);
+            await alert(t('checklist_bandeja.title'), t('checklist_bandeja.anulado_exito'));
+            navigate('/checklist', { viewTransition: true });
+        } catch (err) {
+            await alert(t('checklist_bandeja.title'), err instanceof Error ? err.message : t('checklist_bandeja.error_anular'));
+        } finally {
+            setAnulando(false);
+        }
+    };
 
     const fecha = checklist ? new Date(checklist.fechaCrea) : null;
     const fechaTexto = fecha && !Number.isNaN(fecha.getTime())
@@ -116,6 +160,33 @@ export function ChecklistDetallePage() {
                                     <p className="text-[10px] font-black text-cb-text-secondary uppercase tracking-wider mb-0.5">{t('checklist_bandeja.campo_exhibicion')}</p>
                                     <p className="text-sm text-cb-text-primary font-medium">{checklist.exhibicionNroExhibicion} — {checklist.exhibicionNombre}</p>
                                 </div>
+                            </div>
+
+                            {/* Acciones de estado */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                {checklist.estadoId === 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAtender}
+                                        disabled={atendiendo || anulando}
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all duration-150 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {atendiendo ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                        {t('checklist_bandeja.accion_atender')}
+                                    </button>
+                                )}
+
+                                {checklist.estadoId > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAnular}
+                                        disabled={atendiendo || anulando}
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 transition-all duration-150 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {anulando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                        {t('checklist_bandeja.accion_anular')}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Categorías con ítems */}
