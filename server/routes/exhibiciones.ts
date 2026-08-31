@@ -287,6 +287,26 @@ router.get('/catalogo-checklist', async (_req: Request, res: Response) => {
     }
 });
 
+// EXHIBICION.TB_TIPOS_REQUERIMIENTO — catálogo de 9 tipos de ticket
+// (Mantenimiento, Modificación, Muebles, Capacitación, POP, Recojo,
+// Reposición, Folletería, Otros). Confirmado que hasta este plan ninguna
+// columna ni procedimiento existente la usaba — ver spec.
+router.get('/tipos-ticket', async (_req: Request, res: Response) => {
+    try {
+        const pool = await getDbConnection();
+        const result = await pool.request().query(`
+            SELECT IN_tipo_id as id, VC_codigo as codigo, VC_nombre as nombre
+            FROM EXHIBICION.TB_TIPOS_REQUERIMIENTO
+            WHERE BI_activo = 1
+            ORDER BY IN_orden
+        `);
+        res.json({ tipos: result.recordset });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] tipos-ticket error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
