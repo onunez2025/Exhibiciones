@@ -820,6 +820,70 @@ router.post('/:id/tickets', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/:id/tickets/:numero/fotos', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        const numero = req.params.numero;
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+        const exists = await pool.request().input('id', sql.BigInt, id).input('numero', sql.VarChar(10), numero).query(`
+            SELECT 1 FROM EXHIBICION.WEB_MARKETING_REQUERIMIENTO WHERE VC_requerimiento = @numero AND IN_exhibicion_id = @id
+        `);
+        if (exists.recordset.length === 0) {
+            res.status(404).json({ error: 'Ticket no encontrado.' });
+            return;
+        }
+
+        const contentType = typeof req.body?.contentType === 'string' ? req.body.contentType : '';
+        const archivoBase64 = typeof req.body?.archivoBase64 === 'string' ? req.body.archivoBase64 : '';
+
+        const resultado = decodificarFotoBase64(archivoBase64, contentType, MAX_FOTO_BYTES);
+        if (!resultado.ok) {
+            res.status(400).json({ error: resultado.error });
+            return;
+        }
+
+        const blobContainerUrl = cleanEnv('BLOB_CONTAINER_URL');
+        const blobSasToken = cleanEnv('BLOB_SAS_TOKEN');
+        const nombreArchivo = `${randomUUID()}${resultado.foto.extension}`;
+
+        const uploadRes = await fetch(buildFotoUrl(blobContainerUrl, blobSasToken, nombreArchivo), {
+            method: 'PUT',
+            headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': contentType },
+            body: resultado.foto.buffer,
+        });
+        if (!uploadRes.ok) {
+            const detalle = await uploadRes.text().catch(() => '');
+            console.error('[Exhibiciones] subida a blob (ticket) falló:', uploadRes.status, detalle);
+            res.status(502).json({ error: 'No se pudo subir la foto. Intenta de nuevo.' });
+            return;
+        }
+
+        const insertResult = await pool.request()
+            .input('numero', sql.VarChar(10), numero)
+            .input('nombre', sql.VarChar(200), nombreArchivo)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                INSERT INTO EXHIBICION.WEB_MARKETING_REQUERIMIENTO_FOTO
+                    (VC_requerimiento, VC_directorio, VC_archivo_nombre, IN_estado, VC_usuario_crea, DT_fecha_crea)
+                OUTPUT INSERTED.IN_requerimiento_foto_id as id
+                VALUES (@numero, '', @nombre, 1, @usuario, GETDATE())
+            `);
+
+        // Number(...): IN_requerimiento_foto_id es BIGINT — mismo patrón
+        // ya conocido en el resto del código, se normaliza a number acá
+        // para que coincida con el tipo TicketFoto.id.
+        res.status(201).json({ id: Number(insertResult.recordset[0].id), url: buildFotoUrl(blobContainerUrl, blobSasToken, nombreArchivo) });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] agregar foto de ticket error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.post('/:id/aprobar', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
