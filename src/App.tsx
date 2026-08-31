@@ -12,7 +12,9 @@ import { ExhibicionDetallePage } from './pages/ExhibicionDetallePage.js';
 import { ExhibicionCrearPage } from './pages/ExhibicionCrearPage.js';
 import { ChecklistCrearPage } from './pages/ChecklistCrearPage.js';
 import { TicketCrearPage } from './pages/TicketCrearPage.js';
-import { ListChecks, Ticket, Info } from 'lucide-react';
+import { ChecklistsPage } from './pages/ChecklistsPage.js';
+import { ChecklistDetallePage } from './pages/ChecklistDetallePage.js';
+import { Ticket, Info } from 'lucide-react';
 
 export default function App() {
     return (
@@ -35,7 +37,8 @@ export default function App() {
                                 <Route path="/exhibiciones/:id" element={<ExhibicionDetallePage />} />
                                 <Route path="/exhibiciones/:id/checklist/nueva" element={<ChecklistCrearPage />} />
                                 <Route path="/exhibiciones/:id/tickets/nuevo" element={<TicketCrearPage />} />
-                                <Route path="/checklist" element={<ComingSoonPage titleKey="nav.checklist" icon={ListChecks} />} />
+                                <Route path="/checklist" element={<ChecklistsPage />} />
+                                <Route path="/checklist/:id" element={<ChecklistDetallePage />} />
                                 <Route path="/tickets" element={<ComingSoonPage titleKey="nav.tickets" icon={Ticket} />} />
                                 <Route path="/informacion" element={<ComingSoonPage titleKey="nav.informacion" icon={Info} />} />
                                 {/* TODO: agrega tus rutas de módulo real aquí */}
