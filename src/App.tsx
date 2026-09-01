@@ -14,7 +14,9 @@ import { ChecklistCrearPage } from './pages/ChecklistCrearPage.js';
 import { TicketCrearPage } from './pages/TicketCrearPage.js';
 import { ChecklistsPage } from './pages/ChecklistsPage.js';
 import { ChecklistDetallePage } from './pages/ChecklistDetallePage.js';
-import { Ticket, Info } from 'lucide-react';
+import { TicketsPage } from './pages/TicketsPage.js';
+import { TicketDetallePage } from './pages/TicketDetallePage.js';
+import { Info } from 'lucide-react';
 
 export default function App() {
     return (
@@ -39,7 +41,8 @@ export default function App() {
                                 <Route path="/exhibiciones/:id/tickets/nuevo" element={<TicketCrearPage />} />
                                 <Route path="/checklist" element={<ChecklistsPage />} />
                                 <Route path="/checklist/:id" element={<ChecklistDetallePage />} />
-                                <Route path="/tickets" element={<ComingSoonPage titleKey="nav.tickets" icon={Ticket} />} />
+                                <Route path="/tickets" element={<TicketsPage />} />
+                                <Route path="/tickets/:numero" element={<TicketDetallePage />} />
                                 <Route path="/informacion" element={<ComingSoonPage titleKey="nav.informacion" icon={Info} />} />
                                 {/* TODO: agrega tus rutas de módulo real aquí */}
                             </Route>
