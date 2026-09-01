@@ -247,5 +247,33 @@
         "error_anular": "Couldn't cancel ticket.",
         "reintentar": "Retry",
         "vacio": "No tickets found."
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Real-time operational metrics and exhibit activity",
+        "welcome": "Welcome, {{name}}!",
+        "reintentar": "Refresh",
+        "cargando": "Loading recent activity...",
+        "error_cargar": "Couldn't load dashboard metrics.",
+        "kpi_exhibiciones_activas": "Active Exhibits",
+        "kpi_exhibiciones_pendientes_sub": "{{count}} pending review",
+        "kpi_checklists_total": "Completed Checklists",
+        "kpi_conformidad_sub": "{{percent}}% overall conformity",
+        "kpi_tickets_pendientes": "Pending Tickets",
+        "kpi_tickets_atendidos_sub": "{{count}} resolved and closed",
+        "kpi_tareas_pendientes": "Admin Review",
+        "kpi_tareas_pendientes_sub": "Tasks requiring attention",
+        "accesos_rapidos": "Quick Actions",
+        "accion_nueva_exhibicion": "New Exhibit",
+        "accion_nueva_exhibicion_desc": "Register store point",
+        "accion_ver_checklists": "Checklist Inbox",
+        "accion_ver_checklists_desc": "Monitor compliance",
+        "accion_ver_tickets": "Tickets Inbox",
+        "accion_ver_tickets_desc": "Manage requests",
+        "ultimos_checklists": "Recent Checklists",
+        "ultimos_tickets": "Recent Tickets",
+        "ver_todos": "View all",
+        "sin_checklists": "No recent checklists found.",
+        "sin_tickets": "No recent tickets found."
     }
 }

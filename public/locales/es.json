@@ -247,5 +247,33 @@
         "error_anular": "No se pudo anular el ticket.",
         "reintentar": "Reintentar",
         "vacio": "No se encontraron tickets registrados."
+    },
+    "dashboard": {
+        "title": "Panel de Control",
+        "subtitle": "Métricas operativas y actividad de exhibiciones en tiempo real",
+        "welcome": "¡Bienvenido, {{name}}!",
+        "reintentar": "Actualizar",
+        "cargando": "Cargando actividad reciente...",
+        "error_cargar": "No se pudieron cargar las métricas del dashboard.",
+        "kpi_exhibiciones_activas": "Exhibiciones Activas",
+        "kpi_exhibiciones_pendientes_sub": "{{count}} pendientes de revisión",
+        "kpi_checklists_total": "Checklists Realizados",
+        "kpi_conformidad_sub": "{{percent}}% de conformidad global",
+        "kpi_tickets_pendientes": "Tickets Pendientes",
+        "kpi_tickets_atendidos_sub": "{{count}} atendidos y cerrados",
+        "kpi_tareas_pendientes": "Atención Administrativa",
+        "kpi_tareas_pendientes_sub": "Tareas que requieren atención",
+        "accesos_rapidos": "Accesos Rápidos",
+        "accion_nueva_exhibicion": "Nueva Exhibición",
+        "accion_nueva_exhibicion_desc": "Registrar punto de venta",
+        "accion_ver_checklists": "Bandeja de Checklists",
+        "accion_ver_checklists_desc": "Supervisar conformidad",
+        "accion_ver_tickets": "Bandeja de Tickets",
+        "accion_ver_tickets_desc": "Gestionar requerimientos",
+        "ultimos_checklists": "Últimos Checklists Registrados",
+        "ultimos_tickets": "Últimos Tickets Generados",
+        "ver_todos": "Ver todos",
+        "sin_checklists": "No hay checklists registrados recientemente.",
+        "sin_tickets": "No hay tickets registrados recientemente."
     }
 }
