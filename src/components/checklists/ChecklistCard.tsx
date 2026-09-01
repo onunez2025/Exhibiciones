@@ -42,8 +42,12 @@ export function ChecklistCard({ checklist, onVer }: ChecklistCardProps) {
 
     return (
         <div
+            onClick={() => onVer(checklist.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onVer(checklist.id); }}
             className={cn(
-                'relative border border-cb-border bg-card px-4 py-3 shadow-cb-level-1',
+                'relative border border-cb-border bg-card px-4 py-3 shadow-cb-level-1 cursor-pointer',
                 'hover:shadow-cb-level-2 hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200',
                 "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:rounded-l-[inherit]",
                 SIATC_THEME.TOKENS.RADIUS.CARD,
