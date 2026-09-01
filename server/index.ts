@@ -18,6 +18,7 @@ import authRouter from './routes/auth.js';
 import healthRouter from './routes/health.js';
 import exhibicionesRouter from './routes/exhibiciones.js';
 import checklistsRouter from './routes/checklists.js';
+import ticketsRouter from './routes/tickets.js';
 import { verifyToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -126,6 +127,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/exhibiciones', verifyToken, exhibicionesRouter);
 app.use('/api/checklists', verifyToken, checklistsRouter);
+app.use('/api/tickets', verifyToken, ticketsRouter);
 
 // ─── Serve frontend in production ─────────────────────────────────────────────
 if (cleanEnv('NODE_ENV') === 'production') {
