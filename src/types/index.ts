@@ -337,3 +337,41 @@ export interface AnularTicketResponse {
     estadoCodigo: '00';
 }
 
+export interface DashboardKPIs {
+    exhibicionesActivas: number;
+    exhibicionesPendientes: number;
+    checklistsTotal: number;
+    checklistsPendientes: number;
+    checklistsConformesTotal: number;
+    porcentajeConformidad: number;
+    ticketsPendientes: number;
+    ticketsAtendidos: number;
+}
+
+export interface DashboardChecklistReciente {
+    id: number;
+    checklistNumber: number;
+    exhibicionNroExhibicion: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    estadoId: number;
+    conforme: boolean;
+    fechaCrea: string;
+}
+
+export interface DashboardTicketReciente {
+    numero: string;
+    tipoNombre: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    estadoCodigo: string;
+    estadoNombre: string;
+    fechaCrea: string;
+}
+
+export interface DashboardResumenResponse {
+    kpis: DashboardKPIs;
+    ultimosChecklists: DashboardChecklistReciente[];
+    ultimosTickets: DashboardTicketReciente[];
+}
+
