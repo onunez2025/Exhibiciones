@@ -266,3 +266,74 @@ export interface AnularChecklistResponse {
     estadoId: 0;
 }
 
+export interface TicketListItem {
+    numero: string;
+    exhibicionId: number;
+    exhibicionNroExhibicion: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    sucursalNombre: string;
+    tipoId: number;
+    tipoNombre: string;
+    motivo: string;
+    estadoCodigo: string;
+    estadoNombre: string;
+    usuarioCrea: string;
+    fechaCrea: string;
+}
+
+export interface TicketsListResponse {
+    items: TicketListItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
+export interface TicketsFiltros {
+    estado?: string;
+    tipoId?: number;
+    tienda?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+}
+
+export interface TicketDetalleComponente {
+    id: number;
+    codigo: string;
+    nombre: string;
+    cantidad: number;
+}
+
+export interface TicketDetalleFoto {
+    id: number;
+    url: string;
+    fechaCrea: string;
+}
+
+export interface TicketDetalle {
+    numero: string;
+    exhibicionId: number;
+    exhibicionNroExhibicion: string;
+    exhibicionNombre: string;
+    clienteNombre: string;
+    sucursalNombre: string;
+    tipoId: number;
+    tipoNombre: string;
+    motivo: string;
+    estadoCodigo: string;
+    estadoNombre: string;
+    usuarioCrea: string;
+    fechaCrea: string;
+    componentes: TicketDetalleComponente[];
+    fotos: TicketDetalleFoto[];
+}
+
+export interface AtenderTicketResponse {
+    estadoCodigo: '05';
+    estadoNombre: string;
+}
+
+export interface AnularTicketResponse {
+    estadoCodigo: '00';
+}
+
