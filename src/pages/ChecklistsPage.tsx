@@ -8,6 +8,7 @@ import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { ChecklistCard } from '../components/checklists/ChecklistCard.js';
 import { ChecklistFiltrosPanel } from '../components/checklists/ChecklistFiltrosPanel.js';
+import { StatusTabs, type StatusTabOption } from '../components/common/StatusTabs.js';
 import { Pagination } from '../components/exhibiciones/Pagination.js';
 import type { ChecklistListItem, ChecklistsListResponse, ChecklistsFiltros } from '../types/index.js';
 
@@ -18,10 +19,12 @@ export function ChecklistsPage() {
     const navigate = useNavigate();
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+    type ChecklistTab = 'pendientes' | 'atendidos' | 'todos';
+    const [tabEstado, setTabEstado] = useState<ChecklistTab>('pendientes');
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [filtrosOpen, setFiltrosOpen] = useState(false);
-    const [filtros, setFiltros] = useState<ChecklistsFiltros>({});
+    const [filtros, setFiltros] = useState<ChecklistsFiltros>({ estadoId: 1 });
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
     const [items, setItems] = useState<ChecklistListItem[]>([]);
@@ -31,6 +34,23 @@ export function ChecklistsPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [loadMoreError, setLoadMoreError] = useState(false);
+
+    const checklistTabs: StatusTabOption<ChecklistTab>[] = [
+        { id: 'pendientes', label: t('checklist_bandeja.tab_pendientes') },
+        { id: 'atendidos', label: t('checklist_bandeja.tab_atendidos') },
+        { id: 'todos', label: t('checklist_bandeja.tab_todos') },
+    ];
+
+    const handleTabChange = (tab: ChecklistTab) => {
+        setTabEstado(tab);
+        setFiltros(prev => {
+            const next = { ...prev };
+            if (tab === 'pendientes') next.estadoId = 1;
+            else if (tab === 'atendidos') next.estadoId = 2;
+            else delete next.estadoId;
+            return next;
+        });
+    };
 
     useEffect(() => {
         const timer = setTimeout(() => setSearch(searchInput), 400);
@@ -47,6 +67,7 @@ export function ChecklistsPage() {
             params.set('page', String(pageToLoad));
             params.set('pageSize', String(pageSize));
             if (search) params.set('search', search);
+            if (filtros.estadoId) params.set('estadoId', String(filtros.estadoId));
             if (filtros.conforme) params.set('conforme', filtros.conforme);
             if (filtros.tienda) params.set('tienda', filtros.tienda);
             if (filtros.fechaDesde) params.set('fechaDesde', filtros.fechaDesde);
@@ -105,6 +126,13 @@ export function ChecklistsPage() {
 
             <div className={SIATC_THEME.LAYOUT.CONTENT_CONTAINER}>
                 <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-cb-bg">
+                    {/* Pestañas de Estado Rápidas */}
+                    <StatusTabs
+                        tabs={checklistTabs}
+                        activeTab={tabEstado}
+                        onChange={handleTabChange}
+                    />
+
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"

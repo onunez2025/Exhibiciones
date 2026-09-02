@@ -226,6 +226,7 @@ export interface ChecklistsListResponse {
 
 export interface ChecklistsFiltros {
     conforme?: 'si' | 'no';
+    estadoId?: number;
     tienda?: string;
     fechaDesde?: string;
     fechaHasta?: string;

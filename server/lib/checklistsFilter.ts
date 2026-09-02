@@ -3,6 +3,7 @@ import sql from 'mssql';
 export interface ChecklistsQueryParams {
     search?: string;
     conforme?: string;
+    estadoId?: number;
     tienda?: string;
     fechaDesde?: string;
     fechaHasta?: string;
@@ -40,6 +41,11 @@ export function buildChecklistsFilter(query: ChecklistsQueryParams): ChecklistsF
     if (tienda) {
         clauses.push('(E.VC_cliente_nombre LIKE @tienda OR E.VC_sucursal_nombre LIKE @tienda)');
         params.push({ name: 'tienda', type: sql.NVarChar(250), value: `%${tienda}%` });
+    }
+
+    if (typeof query.estadoId === 'number' && Number.isInteger(query.estadoId) && query.estadoId > 0) {
+        clauses.push('C.IN_estado_id = @estadoId');
+        params.push({ name: 'estadoId', type: sql.Int, value: query.estadoId });
     }
 
     if (query.fechaDesde) {

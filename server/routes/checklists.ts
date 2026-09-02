@@ -21,9 +21,11 @@ function asString(value: unknown): string | undefined {
 }
 
 function parseChecklistsQuery(query: Request['query']): ChecklistsQueryParams {
+    const estadoIdNum = query.estadoId ? parseInt(String(query.estadoId), 10) : undefined;
     return {
         search: asString(query.search),
         conforme: asString(query.conforme),
+        estadoId: Number.isInteger(estadoIdNum) ? estadoIdNum : undefined,
         tienda: asString(query.tienda),
         fechaDesde: asString(query.fechaDesde),
         fechaHasta: asString(query.fechaHasta),
