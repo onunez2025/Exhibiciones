@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, RefreshCw, Loader2 } from 'lucide-react';
+import { Search, Filter, RefreshCw, Loader2, Plus } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
+import { cn } from '../utils/cn.js';
 import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { TicketCard } from '../components/tickets/TicketCard.js';
 import { TicketFiltrosPanel } from '../components/tickets/TicketFiltrosPanel.js';
 import { StatusTabs, type StatusTabOption } from '../components/common/StatusTabs.js';
 import { Pagination } from '../components/exhibiciones/Pagination.js';
+import { SelectorExhibicionModal } from '../components/common/SelectorExhibicionModal.js';
 import type { TicketListItem, TicketsListResponse, TicketsFiltros } from '../types/index.js';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -34,6 +36,7 @@ export function TicketsPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [loadMoreError, setLoadMoreError] = useState(false);
+    const [selectorModalOpen, setSelectorModalOpen] = useState(false);
 
     const ticketTabs: StatusTabOption<TicketTab>[] = [
         { id: 'pendientes', label: t('tickets_bandeja.tab_pendientes') },
@@ -60,31 +63,41 @@ export function TicketsPage() {
     const requestSeq = useRef(0);
     const fetchPage = useCallback(async (pageToLoad: number, append: boolean) => {
         const seq = ++requestSeq.current;
-        if (append) { setLoadingMore(true); setLoadMoreError(false); }
-        else { setLoading(true); setError(''); }
+        if (append) {
+            setLoadingMore(true);
+            setLoadMoreError(false);
+        } else {
+            setLoading(true);
+            setError('');
+        }
+
         try {
             const params = new URLSearchParams();
             params.set('page', String(pageToLoad));
             params.set('pageSize', String(pageSize));
             if (search) params.set('search', search);
             if (filtros.estado) params.set('estado', filtros.estado);
-            if (filtros.tipoId) params.set('tipoId', String(filtros.tipoId));
-            if (filtros.tienda) params.set('tienda', filtros.tienda);
+            if (filtros.tipoId !== undefined) params.set('tipoId', String(filtros.tipoId));
             if (filtros.fechaDesde) params.set('fechaDesde', filtros.fechaDesde);
             if (filtros.fechaHasta) params.set('fechaHasta', filtros.fechaHasta);
 
-            const data = await apiClient.get<TicketsListResponse>(`/tickets?${params.toString()}`);
+            const res = await apiClient.get<TicketsListResponse>(`/tickets?${params.toString()}`);
             if (seq !== requestSeq.current) return;
-            setTotal(data.total);
-            setPage(data.page);
-            setItems(prev => (append ? [...prev, ...data.items] : data.items));
-        } catch (err) {
+            setTotal(res.total);
+            setPage(res.page);
+            setItems(prev => append ? [...prev, ...res.items] : res.items);
+        } catch (err: unknown) {
             if (seq !== requestSeq.current) return;
-            console.error('[Tickets] fetch error:', err);
-            if (append) setLoadMoreError(true); else setError(t('tickets_bandeja.error_cargar'));
+            console.error('[TicketsPage] fetchPage error:', err);
+            if (append) {
+                setLoadMoreError(true);
+            } else {
+                setError(t('tickets_bandeja.error_carga'));
+            }
         } finally {
             if (seq === requestSeq.current) {
-                if (append) setLoadingMore(false); else setLoading(false);
+                if (append) setLoadingMore(false);
+                else setLoading(false);
             }
         }
     }, [pageSize, search, filtros, t]);
@@ -93,17 +106,21 @@ export function TicketsPage() {
         setItems([]);
         setLoadMoreError(false);
         fetchPage(1, false);
-    }, [search, filtros, pageSize, isDesktop]);
+    }, [search, filtros, pageSize, isDesktop, fetchPage]);
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         if (isDesktop || loadMoreError || loadingMore) return;
         const el = sentinelRef.current;
-        if (!el || items.length >= total) return;
+        if (!el) return;
 
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) fetchPage(page + 1, true);
+        const observer = new IntersectionObserver(entries => {
+            const first = entries[0];
+            if (first.isIntersecting && items.length < total && !loading) {
+                fetchPage(page + 1, true);
+            }
         }, { rootMargin: '200px' });
+
         observer.observe(el);
         return () => observer.disconnect();
     }, [isDesktop, items.length, total, loadingMore, loadMoreError, page, fetchPage]);
@@ -112,15 +129,31 @@ export function TicketsPage() {
         navigate(`/tickets/${numero}`, { viewTransition: true });
     };
 
+    const handleSelectExhibicion = (exhibicionId: number) => {
+        setSelectorModalOpen(false);
+        navigate(`/exhibiciones/${exhibicionId}/tickets/nuevo`, { viewTransition: true });
+    };
+
     return (
         <div className={SIATC_THEME.LAYOUT.PAGE_WRAPPER}>
             <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
-                <div className="flex items-center gap-2">
-                    <MobileMenuButton />
-                    <div>
-                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('tickets_bandeja.title')}</h1>
-                        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('tickets_bandeja.subtitle')}</p>
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                        <MobileMenuButton />
+                        <div>
+                            <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('tickets_bandeja.title')}</h1>
+                            <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('tickets_bandeja.subtitle')}</p>
+                        </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setSelectorModalOpen(true)}
+                        className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5 shrink-0')}
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Nuevo Ticket</span>
+                        <span className="sm:hidden">Nuevo</span>
+                    </button>
                 </div>
             </div>
 
@@ -218,6 +251,15 @@ export function TicketsPage() {
                     </div>
                 )}
             </div>
+
+            <SelectorExhibicionModal
+                isOpen={selectorModalOpen}
+                onClose={() => setSelectorModalOpen(false)}
+                onSelect={handleSelectExhibicion}
+                title="Nuevo Ticket de Atención"
+                subtitle="Selecciona la exhibición sobre la cual deseas reportar la incidencia"
+                actionLabel="Reportar"
+            />
         </div>
     );
 }
