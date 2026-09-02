@@ -8,6 +8,7 @@ import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { TicketCard } from '../components/tickets/TicketCard.js';
 import { TicketFiltrosPanel } from '../components/tickets/TicketFiltrosPanel.js';
+import { StatusTabs, type StatusTabOption } from '../components/common/StatusTabs.js';
 import { Pagination } from '../components/exhibiciones/Pagination.js';
 import type { TicketListItem, TicketsListResponse, TicketsFiltros } from '../types/index.js';
 
@@ -18,10 +19,12 @@ export function TicketsPage() {
     const navigate = useNavigate();
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+    type TicketTab = 'pendientes' | 'atendidos' | 'todos';
+    const [tabEstado, setTabEstado] = useState<TicketTab>('pendientes');
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [filtrosOpen, setFiltrosOpen] = useState(false);
-    const [filtros, setFiltros] = useState<TicketsFiltros>({});
+    const [filtros, setFiltros] = useState<TicketsFiltros>({ estado: '01' });
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
     const [items, setItems] = useState<TicketListItem[]>([]);
@@ -31,6 +34,23 @@ export function TicketsPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [loadMoreError, setLoadMoreError] = useState(false);
+
+    const ticketTabs: StatusTabOption<TicketTab>[] = [
+        { id: 'pendientes', label: t('tickets_bandeja.tab_pendientes') },
+        { id: 'atendidos', label: t('tickets_bandeja.tab_atendidos') },
+        { id: 'todos', label: t('tickets_bandeja.tab_todos') },
+    ];
+
+    const handleTabChange = (tab: TicketTab) => {
+        setTabEstado(tab);
+        setFiltros(prev => {
+            const next = { ...prev };
+            if (tab === 'pendientes') next.estado = '01';
+            else if (tab === 'atendidos') next.estado = '05';
+            else delete next.estado;
+            return next;
+        });
+    };
 
     useEffect(() => {
         const timer = setTimeout(() => setSearch(searchInput), 400);
@@ -106,6 +126,13 @@ export function TicketsPage() {
 
             <div className={SIATC_THEME.LAYOUT.CONTENT_CONTAINER}>
                 <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-cb-bg">
+                    {/* Pestañas de Estado Rápidas */}
+                    <StatusTabs
+                        tabs={ticketTabs}
+                        activeTab={tabEstado}
+                        onChange={handleTabChange}
+                    />
+
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
