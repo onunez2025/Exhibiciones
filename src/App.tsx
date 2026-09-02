@@ -6,7 +6,6 @@ import { MainLayout } from './components/layout/MainLayout.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { PerfilPage } from './pages/PerfilPage.js';
-import { ComingSoonPage } from './pages/ComingSoonPage.js';
 import { ExhibicionesPage } from './pages/ExhibicionesPage.js';
 import { ExhibicionDetallePage } from './pages/ExhibicionDetallePage.js';
 import { ExhibicionCrearPage } from './pages/ExhibicionCrearPage.js';
@@ -16,7 +15,7 @@ import { ChecklistsPage } from './pages/ChecklistsPage.js';
 import { ChecklistDetallePage } from './pages/ChecklistDetallePage.js';
 import { TicketsPage } from './pages/TicketsPage.js';
 import { TicketDetallePage } from './pages/TicketDetallePage.js';
-import { Info } from 'lucide-react';
+import { InformacionPage } from './pages/InformacionPage.js';
 
 export default function App() {
     return (
@@ -43,7 +42,7 @@ export default function App() {
                                 <Route path="/checklist/:id" element={<ChecklistDetallePage />} />
                                 <Route path="/tickets" element={<TicketsPage />} />
                                 <Route path="/tickets/:numero" element={<TicketDetallePage />} />
-                                <Route path="/informacion" element={<ComingSoonPage titleKey="nav.informacion" icon={Info} />} />
+                                <Route path="/informacion" element={<InformacionPage />} />
                                 {/* TODO: agrega tus rutas de módulo real aquí */}
                             </Route>
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
