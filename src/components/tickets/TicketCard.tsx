@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Ticket, Eye } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 import type { TicketListItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
@@ -46,29 +46,21 @@ export function TicketCard({ ticket, onVer }: TicketCardProps) {
                 estadoStyle.accent
             )}
         >
-            {/* Fila 1: Ícono + N° Ticket + Tipo + Estado Badge + Botón Ver */}
-            <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <Ticket className="w-3.5 h-3.5" />
+            {/* Fila 1: Ícono + N° Ticket + Tipo (izq) y Estado Badge (der) */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Ticket className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-black text-primary shrink-0">#{ticket.numero}</span>
+                    <span className="text-sm font-semibold text-cb-text-primary truncate min-w-0">
+                        {ticket.tipoNombre}
+                    </span>
                 </div>
-                <span className="text-xs font-black text-primary shrink-0">#{ticket.numero}</span>
-                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-0">
-                    {ticket.tipoNombre}
-                </span>
 
                 <span className={cn('shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', estadoStyle.badge)}>
                     {estadoLabel}
                 </span>
-
-                <button
-                    type="button"
-                    onClick={() => onVer(ticket.numero)}
-                    aria-label={t('tickets_bandeja.accion_ver')}
-                    title={t('tickets_bandeja.accion_ver')}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-cb-text-secondary hover:bg-muted hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer shrink-0"
-                >
-                    <Eye className="w-4 h-4" />
-                </button>
             </div>
 
             {fechaTexto && (

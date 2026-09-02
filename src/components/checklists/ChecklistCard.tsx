@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ListChecks, Eye } from 'lucide-react';
+import { ListChecks } from 'lucide-react';
 import type { ChecklistListItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
@@ -54,36 +54,32 @@ export function ChecklistCard({ checklist, onVer }: ChecklistCardProps) {
                 estadoStyle.accent
             )}
         >
-            {/* Fila 1: Ícono + N° Checklist + Badges (Conforme + Estado) + Botón Ver */}
-            <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <ListChecks className="w-3.5 h-3.5" />
+            {/* Fila 1: Ícono + N° Checklist (izq) y Badges de Conforme y Estado (der) */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <ListChecks className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-black text-primary shrink-0">#{checklist.checklistNumber}</span>
                 </div>
-                <span className="text-xs font-black text-primary shrink-0">#{checklist.checklistNumber}</span>
-                <span className="text-sm font-semibold text-cb-text-primary truncate flex-1 min-w-0">
-                    {checklist.exhibicionNroExhibicion} — {checklist.exhibicionNombre}
-                </span>
 
-                <span className={cn('shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', conformeStyle.badge)}>
-                    {conformeLabel}
-                </span>
-                <span className={cn('shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', estadoStyle.badge)}>
-                    {estadoLabel}
-                </span>
-
-                <button
-                    type="button"
-                    onClick={() => onVer(checklist.id)}
-                    aria-label={t('checklist_bandeja.accion_ver')}
-                    title={t('checklist_bandeja.accion_ver')}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-cb-text-secondary hover:bg-muted hover:text-primary transition-colors duration-150 active:scale-90 cursor-pointer shrink-0"
-                >
-                    <Eye className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                    <span className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', conformeStyle.badge)}>
+                        {conformeLabel}
+                    </span>
+                    <span className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', estadoStyle.badge)}>
+                        {estadoLabel}
+                    </span>
+                </div>
             </div>
 
+            {/* Exhibición Nombre */}
+            <p className="text-xs font-semibold text-cb-text-primary truncate mt-1.5 pl-9">
+                {checklist.exhibicionNroExhibicion ? `${checklist.exhibicionNroExhibicion} — ${checklist.exhibicionNombre}` : checklist.exhibicionNombre}
+            </p>
+
             {fechaTexto && (
-                <p className="text-[10px] text-cb-text-secondary mt-1 pl-9">{fechaTexto}</p>
+                <p className="text-[10px] text-cb-text-secondary mt-0.5 pl-9">{fechaTexto}</p>
             )}
 
             {/* Fila 2: Tienda / Sucursal */}
