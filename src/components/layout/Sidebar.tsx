@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { useDialog } from '../../context/DialogContext.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
-import { LayoutDashboard, LogOut, Globe, Image, ListChecks, Ticket, Info } from 'lucide-react';
+import { LayoutDashboard, LogOut, Globe, Image, ListChecks, Ticket, Info, Shield } from 'lucide-react';
 
 const APP_NAME = 'Exhibiciones';
 const APP_DESC = 'Grupo Sole';
@@ -40,13 +40,15 @@ export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
         if (ok) logout();
     };
 
+    const isAdmin = (user?.role_name || '').toLowerCase() === 'administrador';
+
     const menuItems = [
         { path: '/dashboard', name: t('nav.dashboard'), icon: LayoutDashboard },
         { path: '/exhibiciones', name: t('nav.exhibiciones'), icon: Image },
         { path: '/checklist', name: t('nav.checklist'), icon: ListChecks },
         { path: '/tickets', name: t('nav.tickets'), icon: Ticket },
         { path: '/informacion', name: t('nav.informacion'), icon: Info },
-        // TODO (sub-proyectos futuros): agrega los items de menú de cada módulo real aquí
+        ...(isAdmin ? [{ path: '/seguridad', name: t('nav.seguridad'), icon: Shield }] : []),
     ];
 
     const userInitial = (user?.full_name || user?.username || '?').trim().charAt(0).toUpperCase();

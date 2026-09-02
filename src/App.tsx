@@ -16,6 +16,7 @@ import { ChecklistDetallePage } from './pages/ChecklistDetallePage.js';
 import { TicketsPage } from './pages/TicketsPage.js';
 import { TicketDetallePage } from './pages/TicketDetallePage.js';
 import { InformacionPage } from './pages/InformacionPage.js';
+import { SeguridadPage } from './pages/SeguridadPage.js';
 
 export default function App() {
     return (
@@ -43,6 +44,7 @@ export default function App() {
                                 <Route path="/tickets" element={<TicketsPage />} />
                                 <Route path="/tickets/:numero" element={<TicketDetallePage />} />
                                 <Route path="/informacion" element={<InformacionPage />} />
+                                <Route path="/seguridad" element={<SeguridadPage />} />
                                 {/* TODO: agrega tus rutas de módulo real aquí */}
                             </Route>
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -376,3 +376,59 @@ export interface DashboardResumenResponse {
     ultimosTickets: DashboardTicketReciente[];
 }
 
+// ─── Gestión de Usuarios y Roles (RBAC) ────────────────────────────────────────
+export interface UsuarioListItem {
+    id: number;
+    username: string;
+    fullName: string;
+    email: string | null;
+    celular: string | null;
+    zona: string | null;
+    rolId: number;
+    rolNombre: string | null;
+    activo: boolean;
+    ultimoLogin: string | null;
+    fechaCrea: string;
+}
+
+export interface UsuariosListResponse {
+    items: UsuarioListItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
+export interface UsuarioCrearPayload {
+    username: string;
+    password: string;
+    fullName: string;
+    email?: string;
+    celular?: string;
+    rolId: number;
+    zona?: string;
+}
+
+export interface UsuarioEditarPayload {
+    fullName: string;
+    email?: string;
+    celular?: string;
+    rolId: number;
+    zona?: string;
+    activo: boolean;
+}
+
+export interface RolItem {
+    id: number;
+    nombre: string;
+    descripcion: string | null;
+    activo: boolean;
+    totalUsuarios: number;
+}
+
+export interface PermisoItem {
+    id: number;
+    modulo: string;
+    accion: string;
+    descripcion: string | null;
+}
+
