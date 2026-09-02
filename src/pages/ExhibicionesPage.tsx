@@ -9,6 +9,7 @@ import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { ExhibicionCard } from '../components/exhibiciones/ExhibicionCard.js';
 import { FiltrosPanel } from '../components/exhibiciones/FiltrosPanel.js';
+import { StatusTabs, type StatusTabOption } from '../components/common/StatusTabs.js';
 import { Pagination } from '../components/exhibiciones/Pagination.js';
 import type { Exhibicion, ExhibicionesListResponse, ExhibicionesFiltros } from '../types/index.js';
 
@@ -20,10 +21,12 @@ export function ExhibicionesPage() {
     const navigate = useNavigate();
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+    type ExhibicionTab = 'pendientes' | 'activas' | 'todas';
+    const [tabEstado, setTabEstado] = useState<ExhibicionTab>('pendientes');
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [filtrosOpen, setFiltrosOpen] = useState(false);
-    const [filtros, setFiltros] = useState<ExhibicionesFiltros>({});
+    const [filtros, setFiltros] = useState<ExhibicionesFiltros>({ estado: 1 });
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
     const [items, setItems] = useState<Exhibicion[]>([]);
@@ -33,6 +36,23 @@ export function ExhibicionesPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [loadMoreError, setLoadMoreError] = useState(false);
+
+    const exhibicionTabs: StatusTabOption<ExhibicionTab>[] = [
+        { id: 'pendientes', label: t('exhibiciones_lista.tab_pendientes') },
+        { id: 'activas', label: t('exhibiciones_lista.tab_activas') },
+        { id: 'todas', label: t('exhibiciones_lista.tab_todas') },
+    ];
+
+    const handleTabChange = (tab: ExhibicionTab) => {
+        setTabEstado(tab);
+        setFiltros(prev => {
+            const next = { ...prev };
+            if (tab === 'pendientes') next.estado = 1;
+            else if (tab === 'activas') next.estado = 2;
+            else delete next.estado;
+            return next;
+        });
+    };
 
     // Búsqueda con debounce — evita un request por cada tecla.
     useEffect(() => {
@@ -139,6 +159,13 @@ export function ExhibicionesPage() {
                     (bg-card, blancas, con su propia sombra) se separan del
                     fondo por contraste de tono, no solo por un borde de 1px. */}
                 <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-cb-bg">
+                    {/* Pestañas de Estado Rápidas */}
+                    <StatusTabs
+                        tabs={exhibicionTabs}
+                        activeTab={tabEstado}
+                        onChange={handleTabChange}
+                    />
+
                     {/* En mobile: "Filtros" ocupa su propia fila; buscador +
                         refrescar van juntos en la fila de abajo (están
                         relacionados — refrescar es una acción sobre lo que

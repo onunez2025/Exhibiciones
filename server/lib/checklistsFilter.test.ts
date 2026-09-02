@@ -94,4 +94,16 @@ describe('buildChecklistsFilter', () => {
         );
         expect(result.params.map(p => p.name)).toEqual(['search', 'searchContains', 'tienda', 'fechaDesde', 'fechaHasta']);
     });
+
+    it('adds estadoId clause when valid positive integer is given', () => {
+        const result = buildChecklistsFilter({ estadoId: 1 });
+        expect(result.whereSql).toBe('C.IN_estado_id > 0 AND C.IN_estado_id = @estadoId');
+        expect(findParam(result.params, 'estadoId')?.value).toBe(1);
+    });
+
+    it('ignores invalid or non-positive estadoId', () => {
+        const result = buildChecklistsFilter({ estadoId: 0 });
+        expect(result.whereSql).toBe('C.IN_estado_id > 0');
+        expect(result.params).toEqual([]);
+    });
 });

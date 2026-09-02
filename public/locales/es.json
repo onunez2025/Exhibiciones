@@ -51,6 +51,9 @@
     "exhibiciones_lista": {
         "title": "Exhibiciones",
         "subtitle": "Lista de exhibiciones registradas",
+        "tab_pendientes": "Pendientes",
+        "tab_activas": "Activas",
+        "tab_todas": "Todas",
         "search_placeholder": "N° Exhibición...",
         "acciones": "Acciones",
         "accion_nueva": "Nueva",
@@ -167,6 +170,9 @@
     "checklist_bandeja": {
         "title": "Checklists",
         "subtitle": "Bandeja de checklists registrados",
+        "tab_pendientes": "Pendientes",
+        "tab_atendidos": "Atendidos",
+        "tab_todos": "Todos",
         "detalle_title": "Detalle de Checklist",
         "filtros": "Filtros",
         "search_placeholder": "Buscar por N° checklist o exhibición...",
@@ -205,6 +211,9 @@
     "tickets_bandeja": {
         "title": "Tickets",
         "subtitle": "Bandeja de requerimientos y tickets",
+        "tab_pendientes": "Pendientes",
+        "tab_atendidos": "Atendidos",
+        "tab_todos": "Todos",
         "detalle_title": "Detalle de Ticket",
         "filtros": "Filtros",
         "search_placeholder": "Buscar por N° ticket, exhibición, tienda o motivo...",
