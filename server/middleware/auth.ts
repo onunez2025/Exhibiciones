@@ -100,6 +100,28 @@ export function checkPermission(permission: string) {
             return;
         }
 
+        // Revalida BI_activo en vivo — el JWT dura 24h y no se re-emite al
+        // desactivar un usuario; sin esto, desactivar a alguien no le corta
+        // el acceso hasta que su token expire solo. Costo: un round-trip
+        // extra por request, aceptable porque solo pasa por rutas que ya
+        // exigen un permiso puntual, no todo el tráfico de la app.
+        try {
+            const pool = await getDbConnection();
+            const activoResult = await pool.request()
+                .input('id', sql.BigInt, user.id)
+                .query('SELECT CAST(BI_activo AS BIT) as activo FROM EXHIBICION.TB_USUARIOS WHERE IN_usuario_id = @id');
+            if (activoResult.recordset.length === 0 || activoResult.recordset[0].activo !== true) {
+                res.status(401).json({ error: 'Tu cuenta ha sido desactivada. Inicia sesión nuevamente.' });
+                return;
+            }
+        } catch (err) {
+            console.error('[checkPermission] Error verificando estado del usuario:', (err as Error).message);
+            // Fail-closed: si no se puede confirmar que el usuario sigue
+            // activo, no se concede acceso a una ruta protegida.
+            res.status(500).json({ error: 'No se pudo verificar tu sesión.' });
+            return;
+        }
+
         if (!resolvePermission(user.role_name, user.permissions, permission)) {
             await logAudit(req, 'ACCESS_DENIED', permission, undefined, `Permission denied: ${permission}`);
             res.status(403).json({ error: 'No tienes permiso para realizar esta acción.' });

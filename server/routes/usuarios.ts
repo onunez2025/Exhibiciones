@@ -183,7 +183,45 @@ router.put('/:id', async (req: Request, res: Response) => {
 
         const pool = await getDbConnection();
 
-        await pool.request()
+        const current = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT CAST(u.BI_activo AS BIT) as activo, r.VC_nombre as rolNombre
+            FROM EXHIBICION.TB_USUARIOS u
+            LEFT JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+            WHERE u.IN_usuario_id = @id
+        `);
+        if (current.recordset.length === 0) {
+            res.status(404).json({ error: 'Usuario no encontrado.' });
+            return;
+        }
+
+        const nuevoRolResult = await pool.request().input('rolId', sql.Int, rolId).query(`
+            SELECT VC_nombre as nombre FROM EXHIBICION.TB_ROLES WHERE IN_rol_id = @rolId
+        `);
+        if (nuevoRolResult.recordset.length === 0) {
+            res.status(400).json({ error: 'El rol seleccionado no existe.' });
+            return;
+        }
+
+        // Último-administrador: nada puede dejar al sistema sin ningún
+        // Administrador activo (hoy hay exactamente uno) — recuperarlo
+        // requeriría entrar directo a la base de datos.
+        const eraAdminActivo = current.recordset[0].activo === true
+            && (current.recordset[0].rolNombre || '').trim().toLowerCase() === 'administrador';
+        const seguiraSiendoAdminActivo = activo
+            && (nuevoRolResult.recordset[0].nombre || '').trim().toLowerCase() === 'administrador';
+        if (eraAdminActivo && !seguiraSiendoAdminActivo) {
+            const otros = await pool.request().input('id', sql.BigInt, id).query(`
+                SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
+                JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+                WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
+            `);
+            if (otros.recordset[0].cnt === 0) {
+                res.status(400).json({ error: 'No puedes quitarle el rol de administrador ni desactivar al único administrador activo del sistema.' });
+                return;
+            }
+        }
+
+        const updateResult = await pool.request()
             .input('id', sql.BigInt, id)
             .input('fullName', sql.VarChar(150), fullName)
             .input('email', sql.VarChar(120), email || null)
@@ -202,6 +240,11 @@ router.put('/:id', async (req: Request, res: Response) => {
                     BI_activo = @activo
                 WHERE IN_usuario_id = @id
             `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            res.status(404).json({ error: 'Usuario no encontrado.' });
+            return;
+        }
 
         await logAudit(req, 'USUARIO_ACTUALIZADO', 'TB_USUARIOS', String(id), `Usuario ID ${id} actualizado`);
         res.json({ ok: true, message: 'Usuario actualizado correctamente.' });
@@ -233,7 +276,7 @@ router.put('/:id/password', async (req: Request, res: Response) => {
         const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);
 
         const pool = await getDbConnection();
-        await pool.request()
+        const updateResult = await pool.request()
             .input('id', sql.BigInt, id)
             .input('passwordHash', sql.VarChar(256), passwordHash)
             .query(`
@@ -241,6 +284,11 @@ router.put('/:id/password', async (req: Request, res: Response) => {
                 SET VC_password_hash = @passwordHash
                 WHERE IN_usuario_id = @id
             `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            res.status(404).json({ error: 'Usuario no encontrado.' });
+            return;
+        }
 
         await logAudit(req, 'PASSWORD_RESET_ADMIN', 'TB_USUARIOS', String(id), `Contraseña reseteada por admin para usuario ${id}`);
         res.json({ ok: true, message: 'Contraseña actualizada exitosamente.' });
@@ -260,6 +308,34 @@ router.patch('/:id/toggle-activo', async (req: Request, res: Response) => {
         }
 
         const pool = await getDbConnection();
+
+        const current = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT CAST(u.BI_activo AS BIT) as activo, r.VC_nombre as rolNombre
+            FROM EXHIBICION.TB_USUARIOS u
+            LEFT JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+            WHERE u.IN_usuario_id = @id
+        `);
+        if (current.recordset.length === 0) {
+            res.status(404).json({ error: 'Usuario no encontrado.' });
+            return;
+        }
+
+        // Va a desactivarse (está activo hoy) y es Administrador — no dejar
+        // que el sistema se quede sin ningún admin activo.
+        const esAdminActivo = current.recordset[0].activo === true
+            && (current.recordset[0].rolNombre || '').trim().toLowerCase() === 'administrador';
+        if (esAdminActivo) {
+            const otros = await pool.request().input('id', sql.BigInt, id).query(`
+                SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
+                JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+                WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
+            `);
+            if (otros.recordset[0].cnt === 0) {
+                res.status(400).json({ error: 'No puedes desactivar al único administrador activo del sistema.' });
+                return;
+            }
+        }
+
         const result = await pool.request()
             .input('id', sql.BigInt, id)
             .query(`

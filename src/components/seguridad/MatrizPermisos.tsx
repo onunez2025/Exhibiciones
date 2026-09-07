@@ -14,6 +14,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
     const [selectedRolId, setSelectedRolId] = useState<number>(roles[0]?.id || 1);
     const [selectedPermisoIds, setSelectedPermisoIds] = useState<number[]>([]);
     const [loadingPermisos, setLoadingPermisos] = useState(false);
+    const [loadError, setLoadError] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState<{ text: string; type: 'ok' | 'err' } | null>(null);
 
@@ -24,6 +25,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
     useEffect(() => {
         if (!selectedRolId) return;
         setSaveMessage(null);
+        setLoadError(false);
         setLoadingPermisos(true);
 
         apiClient.get<number[]>(`/roles/${selectedRolId}/permisos`)
@@ -31,8 +33,12 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                 setSelectedPermisoIds(data || []);
             })
             .catch(err => {
+                // Nunca vaciar la selección en un fallo de carga — así se
+                // veía como "este rol no tiene ningún permiso" y Guardar
+                // pisaba los permisos reales con un arreglo vacío. En vez
+                // de eso, se bloquea la edición hasta que la carga funcione.
                 console.error('[MatrizPermisos] Error loading permissions:', err);
-                setSelectedPermisoIds([]);
+                setLoadError(true);
             })
             .finally(() => setLoadingPermisos(false));
     }, [selectedRolId]);
@@ -60,7 +66,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
     };
 
     const handleSave = async () => {
-        if (isAdmin) return;
+        if (isAdmin || loadError) return;
         setSaving(true);
         setSaveMessage(null);
         try {
@@ -141,8 +147,8 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                             <button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={saving || loadingPermisos}
-                                className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5')}
+                                disabled={saving || loadingPermisos || loadError}
+                                className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed')}
                             >
                                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                                 Guardar Permisos
@@ -167,6 +173,14 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                 <div className="py-12 flex flex-col items-center justify-center gap-2 text-cb-text-secondary">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                     <span className="text-xs">Cargando permisos del rol...</span>
+                </div>
+            ) : loadError ? (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold flex items-start gap-2.5">
+                    <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                        No se pudieron cargar los permisos actuales de este rol — no se muestran para evitar guardar
+                        una matriz vacía por error. Selecciona el rol de nuevo para reintentar.
+                    </span>
                 </div>
             ) : (
                 <div className="space-y-4">

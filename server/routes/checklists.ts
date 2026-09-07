@@ -7,6 +7,7 @@ import { buildChecklistsFilter } from '../lib/checklistsFilter.js';
 import type { ChecklistsQueryParams, QueryParam } from '../lib/checklistsFilter.js';
 import { agruparChecklistDetalle } from '../lib/checklistDetalle.js';
 import type { VisualItemRow, VisualTipoRow } from '../lib/checklistCatalogo.js';
+import { checkPermission, logAudit } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -199,7 +200,12 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/:id/atender', async (req: Request, res: Response) => {
+// 'Auditorías.Inspecciones - Registrar'/'- Eliminar' reutilizan el catálogo
+// de permisos ya existente en TB_PERMISOS (no se inventan claves nuevas) —
+// "atender" avanza el estado de una inspección/checklist, "anular" es el
+// gesto destructivo que antes solo se hacía a mano en la base (ver
+// docs/superpowers/specs/2026-08-27-checklist-crear-design.md:237).
+router.post('/:id/atender', checkPermission('auditorías.inspecciones - registrar'), async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
         if (!Number.isInteger(id) || id <= 0) {
@@ -231,6 +237,7 @@ router.post('/:id/atender', async (req: Request, res: Response) => {
             return;
         }
 
+        await logAudit(req, 'CHECKLIST_ATENDIDO', 'TB_CHECKLIST', String(id));
         res.json({ estadoId: 2 });
     } catch (err: unknown) {
         console.error('[Checklists] atender error:', err instanceof Error ? err.message : err);
@@ -238,7 +245,7 @@ router.post('/:id/atender', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/:id/anular', async (req: Request, res: Response) => {
+router.post('/:id/anular', checkPermission('auditorías.inspecciones - eliminar'), async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
         if (!Number.isInteger(id) || id <= 0) {
@@ -263,6 +270,7 @@ router.post('/:id/anular', async (req: Request, res: Response) => {
             return;
         }
 
+        await logAudit(req, 'CHECKLIST_ANULADO', 'TB_CHECKLIST', String(id));
         res.json({ estadoId: 0 });
     } catch (err: unknown) {
         console.error('[Checklists] anular error:', err instanceof Error ? err.message : err);

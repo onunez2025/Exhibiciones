@@ -5,6 +5,7 @@ import { getDbConnection } from '../db.js';
 import { safeError, cleanEnv } from '../lib/security.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { buildTicketsFilter } from '../lib/ticketsFilter.js';
+import { checkPermission, logAudit } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -231,8 +232,12 @@ router.get('/:numero', async (req: Request, res: Response) => {
     }
 });
 
+// 'Requerimientos.Requerimientos - Procesar' reutiliza el permiso ya
+// existente en TB_PERMISOS ("Aprobar, rechazar o avanzar el estado de los
+// requerimientos") — cubre tanto atender como anular, ambos son avances de
+// estado sobre el mismo recurso.
 // ─── POST /api/tickets/:numero/atender — marcar como atendido / cerrado ──────
-router.post('/:numero/atender', async (req: Request, res: Response) => {
+router.post('/:numero/atender', checkPermission('requerimientos.requerimientos - procesar'), async (req: Request, res: Response) => {
     try {
         const numero = String(req.params.numero || '').trim();
         if (!numero || numero.length > 10) {
@@ -252,15 +257,20 @@ router.post('/:numero/atender', async (req: Request, res: Response) => {
                     VC_usuario_modifica = @usuario,
                     DT_fecha_modifica = GETDATE()
                 WHERE VC_requerimiento = @numero AND CH_anulado = 'N' AND VC_estado IN ('01', '02', '03', '04')
+                    AND CH_ticket = 'W'
             `);
 
         if (updateResult.rowsAffected[0] === 0) {
             const checkResult = await pool.request()
                 .input('numero', sql.VarChar(10), numero)
                 .query(`
-                    SELECT VC_estado, CH_anulado FROM EXHIBICION.WEB_MARKETING_REQUERIMIENTO WHERE VC_requerimiento = @numero
+                    SELECT VC_estado, CH_anulado, CH_ticket FROM EXHIBICION.WEB_MARKETING_REQUERIMIENTO WHERE VC_requerimiento = @numero
                 `);
-            if (checkResult.recordset.length === 0 || checkResult.recordset[0].CH_anulado === 'S') {
+            const row = checkResult.recordset[0];
+            if (!row || row.CH_anulado === 'S' || row.CH_ticket !== 'W') {
+                // CH_ticket != 'W': registro legacy de la herramienta "Web
+                // Marketing" vieja (no creado por esta app) — nunca se
+                // gestiona desde acá, se trata como si no existiera.
                 res.status(404).json({ error: 'Ticket no encontrado o anulado.' });
             } else {
                 res.status(409).json({ error: 'El ticket ya ha sido atendido o cerrado.' });
@@ -279,6 +289,7 @@ router.post('/:numero/atender', async (req: Request, res: Response) => {
                 VALUES (@numero, @usuario, @nombre, '05', 'Atendido desde plataforma web')
             `);
 
+        await logAudit(req, 'TICKET_ATENDIDO', 'WEB_MARKETING_REQUERIMIENTO', numero);
         res.json({ estadoCodigo: '05', estadoNombre: 'Atendido por Trade' });
     } catch (err: unknown) {
         console.error('[Tickets] atender error:', err instanceof Error ? err.message : err);
@@ -287,7 +298,7 @@ router.post('/:numero/atender', async (req: Request, res: Response) => {
 });
 
 // ─── POST /api/tickets/:numero/anular — anular ticket ─────────────────────────
-router.post('/:numero/anular', async (req: Request, res: Response) => {
+router.post('/:numero/anular', checkPermission('requerimientos.requerimientos - procesar'), async (req: Request, res: Response) => {
     try {
         const numero = String(req.params.numero || '').trim();
         if (!numero || numero.length > 10) {
@@ -308,9 +319,13 @@ router.post('/:numero/anular', async (req: Request, res: Response) => {
                     VC_usuario_modifica = @usuario,
                     DT_fecha_modifica = GETDATE()
                 WHERE VC_requerimiento = @numero AND CH_anulado = 'N' AND VC_estado != '00'
+                    AND CH_ticket = 'W'
             `);
 
         if (updateResult.rowsAffected[0] === 0) {
+            // No distingue "ya anulado" de "registro legacy ajeno" — mismo
+            // criterio que /atender: para esta app, un CH_ticket != 'W' es
+            // como si no existiera.
             res.status(404).json({ error: 'Ticket no encontrado o ya anulado.' });
             return;
         }
@@ -326,6 +341,7 @@ router.post('/:numero/anular', async (req: Request, res: Response) => {
                 VALUES (@numero, @usuario, @nombre, '00', 'Anulado desde plataforma web')
             `);
 
+        await logAudit(req, 'TICKET_ANULADO', 'WEB_MARKETING_REQUERIMIENTO', numero);
         res.json({ estadoCodigo: '00' });
     } catch (err: unknown) {
         console.error('[Tickets] anular error:', err instanceof Error ? err.message : err);

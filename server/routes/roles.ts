@@ -101,6 +101,28 @@ router.put('/:id/permisos', checkPermission('seguridad.roles - gestionar'), asyn
 
         const { permisoIds } = parsed.data;
         const pool = await getDbConnection();
+
+        // Nadie puede conceder un permiso que no tiene — sin esto, cualquier
+        // usuario con 'seguridad.roles - gestionar' podía otorgarse a sí
+        // mismo (o a su propio rol) el catálogo completo de permisos,
+        // incluido 'seguridad.usuarios - gestionar', en un solo request.
+        // Administrador siempre pasa (mismo bypass que resolvePermission).
+        if ((req.user?.role_name || '').trim().toLowerCase() !== 'administrador') {
+            const propios = new Set(req.user?.permissions ?? []);
+            const catalogoResult = await pool.request().query(`
+                SELECT IN_permiso_id as id, VC_modulo as modulo, VC_accion as accion FROM EXHIBICION.TB_PERMISOS
+            `);
+            const noAutorizados = catalogoResult.recordset.filter((p: { id: number; modulo: string; accion: string }) => {
+                if (!permisoIds.includes(p.id)) return false;
+                const clave = `${(p.modulo || '').trim()}.${(p.accion || '').trim()}`.toLowerCase();
+                return !propios.has(clave);
+            });
+            if (noAutorizados.length > 0) {
+                res.status(403).json({ error: 'No puedes asignar permisos que tú mismo no tienes.' });
+                return;
+            }
+        }
+
         const tx = pool.transaction();
         await tx.begin();
 
