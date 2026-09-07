@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Shield, Save, Loader2, Info, Users, Sparkles } from 'lucide-react';
 import type { RolItem, PermisoItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -11,6 +12,7 @@ interface MatrizPermisosProps {
 }
 
 export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
+    const { t } = useTranslation();
     const [selectedRolId, setSelectedRolId] = useState<number>(roles[0]?.id || 1);
     const [selectedPermisoIds, setSelectedPermisoIds] = useState<number[]>([]);
     const [loadingPermisos, setLoadingPermisos] = useState(false);
@@ -73,11 +75,11 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
             await apiClient.put(`/roles/${selectedRolId}/permisos`, {
                 permisoIds: selectedPermisoIds,
             });
-            setSaveMessage({ text: 'Matriz de permisos actualizada correctamente.', type: 'ok' });
+            setSaveMessage({ text: t('seguridad.matriz_guardado_ok'), type: 'ok' });
             setTimeout(() => setSaveMessage(null), 4000);
         } catch (err: unknown) {
             console.error('[MatrizPermisos] Save error:', err);
-            setSaveMessage({ text: 'No se pudo guardar la matriz de permisos.', type: 'err' });
+            setSaveMessage({ text: t('seguridad.matriz_guardado_error'), type: 'err' });
         } finally {
             setSaving(false);
         }
@@ -89,7 +91,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
             <div className="space-y-2">
                 <label className="text-xs font-black text-cb-text-primary uppercase tracking-wide flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-primary" />
-                    Selecciona un Rol para configurar sus accesos:
+                    {t('seguridad.matriz_selecciona_rol')}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {roles.map(r => {
@@ -109,7 +111,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                                 <span className="text-xs font-bold truncate">{r.nombre}</span>
                                 <div className="flex items-center gap-1 text-[10px] text-cb-text-secondary mt-1">
                                     <Users className="w-3 h-3 text-primary/70" />
-                                    <span>{r.totalUsuarios} usuarios</span>
+                                    <span>{t('seguridad.matriz_usuarios_count', { count: r.totalUsuarios })}</span>
                                 </div>
                             </button>
                         );
@@ -125,7 +127,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                             <span className="text-sm font-black text-cb-text-primary">{selectedRol.nombre}</span>
                             {isAdmin && (
                                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-500/20">
-                                    Super Admin
+                                    {t('seguridad.matriz_super_admin')}
                                 </span>
                             )}
                         </div>
@@ -151,7 +153,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                                 className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed')}
                             >
                                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                Guardar Permisos
+                                {t('seguridad.matriz_guardar')}
                             </button>
                         </div>
                     )}
@@ -163,7 +165,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                 <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-2.5 text-xs text-primary">
                     <Info className="w-4 h-4 shrink-0 mt-0.5" />
                     <div>
-                        <span className="font-bold">Acceso Total Irrevocable:</span> Por diseño de seguridad, el rol Administrador posee todos los permisos habilitados de forma permanente.
+                        <span className="font-bold">{t('seguridad.matriz_acceso_total_titulo')}</span> {t('seguridad.matriz_acceso_total_desc')}
                     </div>
                 </div>
             )}
@@ -172,15 +174,12 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
             {loadingPermisos ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-2 text-cb-text-secondary">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="text-xs">Cargando permisos del rol...</span>
+                    <span className="text-xs">{t('seguridad.matriz_cargando')}</span>
                 </div>
             ) : loadError ? (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold flex items-start gap-2.5">
                     <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>
-                        No se pudieron cargar los permisos actuales de este rol — no se muestran para evitar guardar
-                        una matriz vacía por error. Selecciona el rol de nuevo para reintentar.
-                    </span>
+                    <span>{t('seguridad.matriz_error_cargar')}</span>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -198,10 +197,13 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                                     <div className="flex items-center gap-2">
                                         <Sparkles className="w-3.5 h-3.5 text-primary" />
                                         <h3 className="text-xs font-black text-cb-text-primary uppercase tracking-wide">
-                                            Módulo: {modulo}
+                                            {t('seguridad.matriz_modulo', { modulo })}
                                         </h3>
                                         <span className="text-[10px] font-bold text-cb-text-secondary">
-                                            ({moduloPermisos.filter(p => selectedPermisoIds.includes(p.id) || isAdmin).length} de {moduloPermisos.length})
+                                            ({t('seguridad.matriz_conteo', {
+                                                activos: moduloPermisos.filter(p => selectedPermisoIds.includes(p.id) || isAdmin).length,
+                                                total: moduloPermisos.length,
+                                            })})
                                         </span>
                                     </div>
 
@@ -212,7 +214,7 @@ export function MatrizPermisos({ roles, permisos }: MatrizPermisosProps) {
                                                 onClick={() => (todosAsignados ? handleDeselectAll(modulo) : handleSelectAll(modulo))}
                                                 className="text-primary hover:underline font-semibold cursor-pointer"
                                             >
-                                                {todosAsignados ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                                                {todosAsignados ? t('seguridad.matriz_deseleccionar_todos') : t('seguridad.matriz_seleccionar_todos')}
                                             </button>
                                         </div>
                                     )}

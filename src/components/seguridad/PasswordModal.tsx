@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Key, Loader2 } from 'lucide-react';
 import type { UsuarioListItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -12,6 +13,7 @@ interface PasswordModalProps {
 }
 
 export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: PasswordModalProps) {
+    const { t } = useTranslation();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -30,12 +32,12 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
         setError('');
 
         if (newPassword.length < 6) {
-            setError('La nueva contraseña debe tener al menos 6 caracteres.');
+            setError(t('seguridad.password_error_min_length'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setError('Las contraseñas no coinciden.');
+            setError(t('seguridad.password_error_no_coinciden'));
             return;
         }
 
@@ -45,7 +47,7 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
             onClose();
         } catch (err: unknown) {
             console.error('[PasswordModal] Error:', err);
-            setError((err as { message?: string })?.message || 'No se pudo cambiar la contraseña.');
+            setError((err as { message?: string })?.message || t('seguridad.password_error_generico'));
         } finally {
             setLoading(false);
         }
@@ -59,8 +61,8 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
                     <div className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-primary" />
                         <div>
-                            <h2 className="text-sm font-black text-cb-text-primary">Resetear Contraseña</h2>
-                            <p className="text-[11px] text-cb-text-secondary">Para @{usuario.username}</p>
+                            <h2 className="text-sm font-black text-cb-text-primary">{t('seguridad.password_titulo')}</h2>
+                            <p className="text-[11px] text-cb-text-secondary">{t('seguridad.password_para_usuario', { username: usuario.username })}</p>
                         </div>
                     </div>
                     <button
@@ -80,25 +82,25 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
                     )}
 
                     <div>
-                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">Nueva Contraseña</label>
+                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_password_nueva')}</label>
                         <input
                             type="password"
                             required
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Mínimo 6 caracteres"
+                            placeholder={t('seguridad.campo_password_nueva_placeholder')}
                             className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">Confirmar Contraseña</label>
+                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_password_confirmar')}</label>
                         <input
                             type="password"
                             required
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Repite la nueva contraseña"
+                            placeholder={t('seguridad.campo_password_confirmar_placeholder')}
                             className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary"
                         />
                     </div>
@@ -109,7 +111,7 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
                             onClick={onClose}
                             className="px-3 py-1.5 rounded-xl border border-cb-border text-xs font-medium text-cb-text-secondary hover:bg-muted transition-colors cursor-pointer"
                         >
-                            Cancelar
+                            {t('seguridad.accion_cancelar')}
                         </button>
                         <button
                             type="submit"
@@ -117,7 +119,7 @@ export function PasswordModal({ isOpen, onClose, onResetPassword, usuario }: Pas
                             className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5')}
                         >
                             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                            Actualizar Contraseña
+                            {t('seguridad.accion_actualizar_password')}
                         </button>
                     </div>
                 </form>

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, X, MapPin, Store, ChevronRight, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient.js';
 import type { Exhibicion, ExhibicionesListResponse } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
-import { getEstadoEstilo } from '../../utils/estadoExhibicion.js';
+import { getEstadoEstilo, getEstadoLabelKey } from '../../utils/estadoExhibicion.js';
 
 interface SelectorExhibicionModalProps {
     isOpen: boolean;
@@ -21,8 +22,12 @@ export function SelectorExhibicionModal({
     onSelect,
     title,
     subtitle,
-    actionLabel = 'Continuar',
+    actionLabel,
 }: SelectorExhibicionModalProps) {
+    const { t } = useTranslation();
+    // No se puede poner t(...) como valor por defecto del parámetro (el
+    // hook todavía no existe ahí) — se resuelve en el cuerpo del componente.
+    const accionLabel = actionLabel ?? t('selector_exhibicion.accion_continuar');
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [exhibiciones, setExhibiciones] = useState<Exhibicion[]>([]);
@@ -67,7 +72,7 @@ export function SelectorExhibicionModal({
             .catch(err => {
                 if (active) {
                     console.error('[SelectorExhibicionModal] Error:', err);
-                    setError('No se pudieron cargar las exhibiciones.');
+                    setError(t('selector_exhibicion.error_cargar'));
                 }
             })
             .finally(() => {
@@ -77,7 +82,7 @@ export function SelectorExhibicionModal({
         return () => {
             active = false;
         };
-    }, [isOpen, search]);
+    }, [isOpen, search, t]);
 
     if (!isOpen) return null;
 
@@ -115,7 +120,7 @@ export function SelectorExhibicionModal({
                             type="text"
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            placeholder="Buscar por cliente, tienda o código #..."
+                            placeholder={t('selector_exhibicion.buscar_placeholder')}
                             className="block w-full pl-10 pr-9 py-2.5 bg-card text-cb-text-primary border border-cb-border rounded-xl focus:ring-4 focus:ring-primary/12 focus:border-primary outline-none text-xs sm:text-sm"
                         />
                         {searchInput && (
@@ -135,7 +140,7 @@ export function SelectorExhibicionModal({
                     {loading ? (
                         <div className="py-16 flex flex-col items-center justify-center gap-2 text-cb-text-secondary">
                             <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                            <span className="text-xs font-medium">Buscando exhibiciones...</span>
+                            <span className="text-xs font-medium">{t('selector_exhibicion.cargando')}</span>
                         </div>
                     ) : error ? (
                         <div className="py-12 text-center text-red-600 text-xs font-semibold">
@@ -144,13 +149,14 @@ export function SelectorExhibicionModal({
                     ) : exhibiciones.length === 0 ? (
                         <div className="py-16 text-center text-cb-text-secondary">
                             <Store className="w-8 h-8 mx-auto mb-2 text-cb-neutral opacity-50" />
-                            <p className="text-xs font-medium">No se encontraron exhibiciones para esa búsqueda.</p>
-                            <p className="text-[11px] text-cb-text-secondary mt-1">Prueba con otro nombre de tienda o código.</p>
+                            <p className="text-xs font-medium">{t('selector_exhibicion.vacio_titulo')}</p>
+                            <p className="text-[11px] text-cb-text-secondary mt-1">{t('selector_exhibicion.vacio_sub')}</p>
                         </div>
                     ) : (
                         exhibiciones.map((ex) => {
                             const estilo = getEstadoEstilo(ex.estadoId);
-                            const estadoLabel = ex.estadoId === 1 ? 'Pendiente' : 'Aprobada';
+                            const estadoLabelKey = getEstadoLabelKey(ex.estadoId);
+                            const estadoLabel = estadoLabelKey ? t(estadoLabelKey) : '—';
                             return (
                                 <div
                                     key={ex.id}
@@ -181,7 +187,7 @@ export function SelectorExhibicionModal({
                                     </div>
 
                                     <div className="flex items-center gap-1 shrink-0 text-primary font-bold text-xs group-hover:translate-x-0.5 transition-transform">
-                                        <span className="hidden sm:inline text-[11px]">{actionLabel}</span>
+                                        <span className="hidden sm:inline text-[11px]">{accionLabel}</span>
                                         <ChevronRight className="w-4 h-4" />
                                     </div>
                                 </div>
@@ -192,13 +198,13 @@ export function SelectorExhibicionModal({
 
                 {/* Footer */}
                 <div className="px-5 py-3 border-t border-cb-border bg-card flex items-center justify-between text-xs text-cb-text-secondary">
-                    <span>{exhibiciones.length} exhibiciones encontradas</span>
+                    <span>{t('selector_exhibicion.footer_count', { count: exhibiciones.length })}</span>
                     <button
                         type="button"
                         onClick={onClose}
                         className="px-3 py-1.5 rounded-xl border border-cb-border text-cb-text-secondary hover:bg-muted transition-colors cursor-pointer"
                     >
-                        Cancelar
+                        {t('selector_exhibicion.accion_cancelar')}
                     </button>
                 </div>
             </div>

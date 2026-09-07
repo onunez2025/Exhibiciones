@@ -257,9 +257,9 @@ export function ChecklistsPage() {
                 isOpen={selectorModalOpen}
                 onClose={() => setSelectorModalOpen(false)}
                 onSelect={handleSelectExhibicion}
-                title="Nuevo Checklist"
-                subtitle="Selecciona la exhibición que vas a auditar en piso de venta"
-                actionLabel="Auditar"
+                title={t('checklist_bandeja.selector_titulo')}
+                subtitle={t('checklist_bandeja.selector_subtitulo')}
+                actionLabel={t('checklist_bandeja.selector_accion')}
             />
         </div>
     );

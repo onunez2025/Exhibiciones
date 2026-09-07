@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Plus, RefreshCw, Loader2, UserX } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
@@ -24,6 +25,7 @@ type SeguridadTab = 'usuarios' | 'roles';
 const DEFAULT_PAGE_SIZE = 20;
 
 export function SeguridadPage() {
+    const { t } = useTranslation();
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
     const [activeTab, setActiveTab] = useState<SeguridadTab>('usuarios');
@@ -110,14 +112,14 @@ export function SeguridadPage() {
             if (seq !== requestSeq.current) return;
             console.error('[Seguridad] Error fetch usuarios:', err);
             if (append) setLoadMoreError(true);
-            else setError('No se pudo cargar la lista de usuarios.');
+            else setError(t('seguridad.error_cargar_usuarios'));
         } finally {
             if (seq === requestSeq.current) {
                 if (append) setLoadingMore(false);
                 else setLoadingUsuarios(false);
             }
         }
-    }, [pageSize, search, filtroRolId, filtroActivo]);
+    }, [pageSize, search, filtroRolId, filtroActivo, t]);
 
     useEffect(() => {
         setUsuarios([]);
@@ -188,8 +190,8 @@ export function SeguridadPage() {
     };
 
     const tabs: StatusTabOption<SeguridadTab>[] = [
-        { id: 'usuarios', label: 'Gestión de Usuarios', badgeCount: totalUsuarios },
-        { id: 'roles', label: 'Roles y Permisos (RBAC)' },
+        { id: 'usuarios', label: t('seguridad.tab_usuarios'), badgeCount: totalUsuarios },
+        { id: 'roles', label: t('seguridad.tab_roles') },
     ];
 
     return (
@@ -199,9 +201,9 @@ export function SeguridadPage() {
                 <div className="flex items-center gap-2">
                     <MobileMenuButton />
                     <div>
-                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>Seguridad y Accesos</h1>
+                        <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('seguridad.title')}</h1>
                         <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
-                            Gestión de usuarios, roles de sistema y matriz de permisos RBAC
+                            {t('seguridad.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -228,7 +230,7 @@ export function SeguridadPage() {
                                         type="text"
                                         value={searchInput}
                                         onChange={e => setSearchInput(e.target.value)}
-                                        placeholder="Buscar por usuario, nombre o correo..."
+                                        placeholder={t('seguridad.buscar_placeholder')}
                                         className="block w-full pl-10 pr-3 py-2 bg-card text-cb-text-primary border border-cb-border rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none text-xs"
                                     />
                                 </div>
@@ -240,7 +242,7 @@ export function SeguridadPage() {
                                         onChange={e => setFiltroRolId(e.target.value ? Number(e.target.value) : undefined)}
                                         className="px-3 py-2 bg-card border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none cursor-pointer"
                                     >
-                                        <option value="">Todos los roles</option>
+                                        <option value="">{t('seguridad.filtro_todos_roles')}</option>
                                         {roles.map(r => (
                                             <option key={r.id} value={r.id}>
                                                 {r.nombre}
@@ -254,16 +256,16 @@ export function SeguridadPage() {
                                         onChange={e => setFiltroActivo(e.target.value)}
                                         className="px-3 py-2 bg-card border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none cursor-pointer"
                                     >
-                                        <option value="todos">Todos los estados</option>
-                                        <option value="activos">Activos</option>
-                                        <option value="inactivos">Inactivos</option>
+                                        <option value="todos">{t('seguridad.filtro_todos_estados')}</option>
+                                        <option value="activos">{t('seguridad.filtro_activos')}</option>
+                                        <option value="inactivos">{t('seguridad.filtro_inactivos')}</option>
                                     </select>
 
                                     {/* Botón Refrescar */}
                                     <button
                                         type="button"
                                         onClick={() => fetchUsuarios(1, false)}
-                                        title="Refrescar lista"
+                                        title={t('seguridad.accion_refrescar')}
                                         className="p-2 bg-card border border-cb-border text-cb-text-secondary hover:text-primary rounded-xl transition-colors cursor-pointer"
                                     >
                                         <RefreshCw className="w-4 h-4" />
@@ -276,7 +278,7 @@ export function SeguridadPage() {
                                         className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5 shrink-0')}
                                     >
                                         <Plus className="w-3.5 h-3.5" />
-                                        Nuevo Usuario
+                                        {t('seguridad.accion_nuevo_usuario')}
                                     </button>
                                 </div>
                             </div>
@@ -285,7 +287,7 @@ export function SeguridadPage() {
                             {loadingUsuarios ? (
                                 <div className="py-16 flex flex-col items-center justify-center gap-2 text-cb-text-secondary">
                                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                                    <span className="text-xs">Cargando usuarios...</span>
+                                    <span className="text-xs">{t('seguridad.cargando_usuarios')}</span>
                                 </div>
                             ) : error ? (
                                 <div className="py-12 text-center text-red-600 text-xs font-semibold">
@@ -294,7 +296,7 @@ export function SeguridadPage() {
                             ) : usuarios.length === 0 ? (
                                 <div className="py-16 text-center text-cb-text-secondary text-xs">
                                     <UserX className="w-8 h-8 mx-auto mb-2 text-cb-neutral opacity-50" />
-                                    No se encontraron usuarios con los filtros seleccionados.
+                                    {t('seguridad.vacio_usuarios')}
                                 </div>
                             ) : (
                                 <div className="space-y-2.5">
@@ -329,7 +331,7 @@ export function SeguridadPage() {
                                                     onClick={() => fetchUsuarios(page + 1, true)}
                                                     className="text-xs text-primary font-semibold hover:underline"
                                                 >
-                                                    Error al cargar más. Toca aquí para reintentar.
+                                                    {t('seguridad.error_cargar_mas')}
                                                 </button>
                                             )}
                                         </div>
@@ -347,7 +349,7 @@ export function SeguridadPage() {
                             {loadingCatalogos ? (
                                 <div className="py-16 flex flex-col items-center justify-center gap-2 text-cb-text-secondary">
                                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                                    <span className="text-xs">Cargando configuración RBAC...</span>
+                                    <span className="text-xs">{t('seguridad.cargando_rbac')}</span>
                                 </div>
                             ) : (
                                 <MatrizPermisos roles={roles} permisos={permisos} />

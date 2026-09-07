@@ -257,9 +257,9 @@ export function TicketsPage() {
                 isOpen={selectorModalOpen}
                 onClose={() => setSelectorModalOpen(false)}
                 onSelect={handleSelectExhibicion}
-                title="Nuevo Ticket de Atención"
-                subtitle="Selecciona la exhibición sobre la cual deseas reportar la incidencia"
-                actionLabel="Reportar"
+                title={t('tickets_bandeja.selector_titulo')}
+                subtitle={t('tickets_bandeja.selector_subtitulo')}
+                actionLabel={t('tickets_bandeja.selector_accion')}
             />
         </div>
     );

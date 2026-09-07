@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Edit, Key, Check, X, Clock } from 'lucide-react';
 import type { UsuarioListItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -20,16 +21,17 @@ function getRolBadgeStyle(rolNombre: string | null) {
 }
 
 export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo }: UsuarioCardProps) {
+    const { t, i18n } = useTranslation();
 
     const ultimoLoginTexto = usuario.ultimoLogin
-        ? new Date(usuario.ultimoLogin).toLocaleDateString('es-PE', {
+        ? new Date(usuario.ultimoLogin).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-PE', {
               day: '2-digit',
               month: '2-digit',
               year: '2-digit',
               hour: '2-digit',
               minute: '2-digit',
           })
-        : 'Nunca';
+        : t('seguridad.nunca');
 
     return (
         <div
@@ -55,7 +57,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
 
                 <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                     <span className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border', getRolBadgeStyle(usuario.rolNombre))}>
-                        {usuario.rolNombre || 'Sin rol'}
+                        {usuario.rolNombre || t('seguridad.sin_rol')}
                     </span>
                     <span
                         className={cn(
@@ -66,7 +68,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
                         )}
                     >
                         {usuario.activo ? <Check className="w-2.5 h-2.5" /> : <X className="w-2.5 h-2.5" />}
-                        {usuario.activo ? 'Activo' : 'Inactivo'}
+                        {usuario.activo ? t('seguridad.estado_activo') : t('seguridad.estado_inactivo')}
                     </span>
                 </div>
             </div>
@@ -87,7 +89,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
                 </div>
                 <div className="flex items-center gap-1.5 truncate">
                     <Clock className="w-3 h-3 text-primary/70 shrink-0" />
-                    <span className="truncate" title={`Último login: ${ultimoLoginTexto}`}>
+                    <span className="truncate" title={t('seguridad.ultimo_login_title', { fecha: ultimoLoginTexto })}>
                         {ultimoLoginTexto}
                     </span>
                 </div>
@@ -105,7 +107,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
                             : 'text-emerald-600 hover:bg-emerald-500/10'
                     )}
                 >
-                    {usuario.activo ? 'Desactivar' : 'Activar'}
+                    {usuario.activo ? t('seguridad.accion_desactivar') : t('seguridad.accion_activar')}
                 </button>
                 <button
                     type="button"
@@ -113,7 +115,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
                     className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-cb-text-secondary hover:text-primary hover:bg-muted transition-colors cursor-pointer flex items-center gap-1"
                 >
                     <Key className="w-3 h-3" />
-                    Contraseña
+                    {t('seguridad.accion_contrasena')}
                 </button>
                 <button
                     type="button"
@@ -121,7 +123,7 @@ export function UsuarioCard({ usuario, onEdit, onChangePassword, onToggleActivo 
                     className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors cursor-pointer flex items-center gap-1"
                 >
                     <Edit className="w-3 h-3" />
-                    Editar
+                    {t('seguridad.accion_editar')}
                 </button>
             </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Loader2, UserPlus, UserCheck } from 'lucide-react';
 import type { UsuarioListItem, RolItem, UsuarioCrearPayload, UsuarioEditarPayload } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -13,6 +14,7 @@ interface UsuarioModalProps {
 }
 
 export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: UsuarioModalProps) {
+    const { t } = useTranslation();
     const isEdit = !!usuarioToEdit;
 
     const [username, setUsername] = useState('');
@@ -57,17 +59,17 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
         setError('');
 
         if (!fullName.trim()) {
-            setError('El nombre completo es requerido.');
+            setError(t('seguridad.usuario_error_nombre_requerido'));
             return;
         }
 
         if (!isEdit) {
             if (!username.trim() || username.length < 3) {
-                setError('El usuario debe tener al menos 3 caracteres.');
+                setError(t('seguridad.usuario_error_usuario_corto'));
                 return;
             }
             if (!password || password.length < 6) {
-                setError('La contraseña debe tener al menos 6 caracteres.');
+                setError(t('seguridad.usuario_error_password_corto'));
                 return;
             }
         }
@@ -97,7 +99,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
             onClose();
         } catch (err: unknown) {
             console.error('[UsuarioModal] Error saving:', err);
-            setError((err as { message?: string })?.message || 'Error al guardar el usuario.');
+            setError((err as { message?: string })?.message || t('seguridad.usuario_error_guardar'));
         } finally {
             setLoading(false);
         }
@@ -111,7 +113,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                     <div className="flex items-center gap-2">
                         {isEdit ? <UserCheck className="w-5 h-5 text-primary" /> : <UserPlus className="w-5 h-5 text-primary" />}
                         <h2 className="text-sm font-black text-cb-text-primary">
-                            {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
+                            {isEdit ? t('seguridad.usuario_titulo_editar') : t('seguridad.usuario_titulo_nuevo')}
                         </h2>
                     </div>
                     <button
@@ -133,13 +135,13 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
 
                     {!isEdit && (
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Usuario (@login) *</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_usuario')}</label>
                             <input
                                 type="text"
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="ej. jpromotor"
+                                placeholder={t('seguridad.campo_usuario_placeholder')}
                                 className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary"
                             />
                         </div>
@@ -147,33 +149,33 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
 
                     {!isEdit && (
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Contraseña Inicial *</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_password')}</label>
                             <input
                                 type="password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Mínimo 6 caracteres"
+                                placeholder={t('seguridad.campo_password_placeholder')}
                                 className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary"
                             />
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">Nombre Completo *</label>
+                        <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_nombre')}</label>
                         <input
                             type="text"
                             required
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="ej. Juan Pérez Alva"
+                            placeholder={t('seguridad.campo_nombre_placeholder')}
                             className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary"
                         />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Email</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_email')}</label>
                             <input
                                 type="email"
                                 value={email}
@@ -183,7 +185,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Celular</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_celular')}</label>
                             <input
                                 type="tel"
                                 value={celular}
@@ -196,7 +198,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Rol en el Sistema *</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_rol')}</label>
                             <select
                                 value={rolId}
                                 onChange={(e) => setRolId(Number(e.target.value))}
@@ -210,18 +212,18 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">Zona Geográfica</label>
+                            <label className="block text-xs font-bold text-cb-text-secondary mb-1">{t('seguridad.campo_zona')}</label>
                             <select
                                 value={zona}
                                 onChange={(e) => setZona(e.target.value)}
                                 className="w-full px-3 py-2 bg-muted/30 border border-cb-border rounded-xl text-xs text-cb-text-primary outline-none focus:border-primary cursor-pointer"
                             >
-                                <option value="LIMA">Lima Metropolitana</option>
-                                <option value="NORTE">Zona Norte</option>
-                                <option value="SUR">Zona Sur</option>
-                                <option value="CENTRO">Zona Centro</option>
-                                <option value="ORIENTE">Zona Oriente</option>
-                                <option value="NACIONAL">Nacional</option>
+                                <option value="LIMA">{t('seguridad.zona_lima')}</option>
+                                <option value="NORTE">{t('seguridad.zona_norte')}</option>
+                                <option value="SUR">{t('seguridad.zona_sur')}</option>
+                                <option value="CENTRO">{t('seguridad.zona_centro')}</option>
+                                <option value="ORIENTE">{t('seguridad.zona_oriente')}</option>
+                                <option value="NACIONAL">{t('seguridad.zona_nacional')}</option>
                             </select>
                         </div>
                     </div>
@@ -236,7 +238,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                                 className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                             />
                             <label htmlFor="checkActivo" className="text-xs font-medium text-cb-text-primary cursor-pointer">
-                                Usuario Activo (Permitir acceso a la plataforma)
+                                {t('seguridad.campo_usuario_activo')}
                             </label>
                         </div>
                     )}
@@ -248,7 +250,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                             onClick={onClose}
                             className="px-3 py-1.5 rounded-xl border border-cb-border text-xs font-medium text-cb-text-secondary hover:bg-muted transition-colors cursor-pointer"
                         >
-                            Cancelar
+                            {t('seguridad.accion_cancelar')}
                         </button>
                         <button
                             type="submit"
@@ -256,7 +258,7 @@ export function UsuarioModal({ isOpen, onClose, onSave, usuarioToEdit, roles }: 
                             className={cn(SIATC_THEME.COMPONENTS.BUTTON_PRIMARY, 'cursor-pointer text-xs flex items-center gap-1.5')}
                         >
                             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                            {isEdit ? 'Guardar Cambios' : 'Crear Usuario'}
+                            {isEdit ? t('seguridad.accion_guardar_cambios') : t('seguridad.accion_crear_usuario')}
                         </button>
                     </div>
                 </form>
