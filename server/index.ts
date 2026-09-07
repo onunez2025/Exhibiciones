@@ -11,6 +11,7 @@ import { RedisStore } from 'rate-limit-redis';
 import { getRedisClient, isRedisAvailable, recordRedisFailure } from './lib/redis.js';
 import { resolveCorsAllow } from './lib/cors.js';
 import { cleanEnv } from './lib/security.js';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -28,7 +29,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = cleanEnv('PORT') || 3000;
+const envPort = cleanEnv('ASPNETCORE_PORT') || cleanEnv('HTTP_PLATFORM_PORT') || cleanEnv('PORT');
+const port: number = /^\d+$/.test(envPort) ? parseInt(envPort, 10) : 3000;
 
 let lastDegradedLogAt = 0;
 const DEGRADED_LOG_INTERVAL_MS = 15_000; // mismo orden que el cooldown del circuit-breaker
@@ -137,12 +139,21 @@ app.use('/api/roles', verifyToken, rolesRouter);
 
 // ─── Serve frontend in production ─────────────────────────────────────────────
 if (cleanEnv('NODE_ENV') === 'production') {
-    const staticPath = path.join(__dirname, '../dist');
+    const candidates = [
+        path.join(__dirname, '../dist'),
+        path.join(__dirname, 'dist'),
+        path.join(process.cwd(), 'dist'),
+    ];
+    const staticPath = candidates.find(p => fs.existsSync(p)) || path.join(process.cwd(), 'dist');
     app.use(express.static(staticPath));
     app.use((req: Request, res: Response, next: NextFunction) => {
         if (req.path.startsWith('/api')) return next();
         const indexPath = path.join(staticPath, 'index.html');
-        res.sendFile(indexPath);
+        if (fs.existsSync(indexPath)) {
+            res.sendFile(indexPath);
+        } else {
+            next();
+        }
     });
 }
 
