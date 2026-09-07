@@ -78,6 +78,7 @@ export function TicketsPage() {
             if (search) params.set('search', search);
             if (filtros.estado) params.set('estado', filtros.estado);
             if (filtros.tipoId !== undefined) params.set('tipoId', String(filtros.tipoId));
+            if (filtros.tienda) params.set('tienda', filtros.tienda);
             if (filtros.fechaDesde) params.set('fechaDesde', filtros.fechaDesde);
             if (filtros.fechaHasta) params.set('fechaHasta', filtros.fechaHasta);
 
@@ -92,7 +93,7 @@ export function TicketsPage() {
             if (append) {
                 setLoadMoreError(true);
             } else {
-                setError(t('tickets_bandeja.error_carga'));
+                setError(t('tickets_bandeja.error_cargar'));
             }
         } finally {
             if (seq === requestSeq.current) {

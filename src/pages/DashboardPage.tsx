@@ -126,7 +126,11 @@ export function DashboardPage() {
                         <KPICard
                             title={t('dashboard.kpi_checklists_total')}
                             value={kpis?.checklistsTotal ?? 0}
-                            subtitle={t('dashboard.kpi_conformidad_sub', { percent: kpis?.porcentajeConformidad ?? 100 })}
+                            subtitle={
+                                kpis && kpis.porcentajeConformidad === null
+                                    ? t('dashboard.kpi_conformidad_sin_datos')
+                                    : t('dashboard.kpi_conformidad_sub', { percent: kpis?.porcentajeConformidad ?? '—' })
+                            }
                             icon={ClipboardCheck}
                             colorVariant="emerald"
                             loading={loading}

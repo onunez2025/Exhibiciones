@@ -29,11 +29,6 @@
         "logout_confirm_title": "Cerrar sesión",
         "logout_confirm_message": "¿Estás seguro de que quieres cerrar tu sesión?"
     },
-    "dashboard": {
-        "title": "Dashboard",
-        "welcome": "Bienvenido, {{name}}.",
-        "subtitle": "Sistema de Exhibiciones Trade Marketing — Grupo Sole"
-    },
     "coming_soon": {
         "subtitle": "Este módulo está en construcción.",
         "message": "Todavía no está disponible — vuelve pronto."
@@ -269,6 +264,7 @@
         "kpi_exhibiciones_pendientes_sub": "{{count}} pendientes de revisión",
         "kpi_checklists_total": "Checklists Realizados",
         "kpi_conformidad_sub": "{{percent}}% de conformidad global",
+        "kpi_conformidad_sin_datos": "Todavía no hay checklists para calcular conformidad",
         "kpi_tickets_pendientes": "Tickets Pendientes",
         "kpi_tickets_atendidos_sub": "{{count}} atendidos y cerrados",
         "kpi_tareas_pendientes": "Atención Administrativa",

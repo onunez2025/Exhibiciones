@@ -344,7 +344,8 @@ export interface DashboardKPIs {
     checklistsTotal: number;
     checklistsPendientes: number;
     checklistsConformesTotal: number;
-    porcentajeConformidad: number;
+    // null cuando checklistsTotal es 0 — "sin datos", no "100% conforme".
+    porcentajeConformidad: number | null;
     ticketsPendientes: number;
     ticketsAtendidos: number;
 }

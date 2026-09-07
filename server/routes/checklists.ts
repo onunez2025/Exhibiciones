@@ -179,7 +179,14 @@ router.get('/:id', async (req: Request, res: Response) => {
             }))
         );
 
-        const conforme = categorias.every(cat => cat.items.every(item => !item.desconforme));
+        // Calculado sobre TODAS las líneas activas de TB_CHECKLIST_DETALLE
+        // (no sobre `categorias`, que solo incluye ítems que sobrevivieron
+        // el join con el catálogo vigente) — mismo criterio exacto que usan
+        // la lista (GET /) y el Dashboard, ambos vía EXISTS en SQL. Antes,
+        // un ítem desconforme huérfano de categoría hacía que el detalle
+        // mostrara "Conforme" mientras la lista mostraba "No Conforme" para
+        // el mismo checklist.
+        const conforme = !detalleResult.recordset.some((d: { desconforme: boolean | number }) => Boolean(d.desconforme));
 
         res.json({
             id: Number(cabecera.id),

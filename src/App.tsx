@@ -17,6 +17,7 @@ import { TicketsPage } from './pages/TicketsPage.js';
 import { TicketDetallePage } from './pages/TicketDetallePage.js';
 import { InformacionPage } from './pages/InformacionPage.js';
 import { SeguridadPage } from './pages/SeguridadPage.js';
+import { RequirePermission } from './components/common/RequirePermission.js';
 
 export default function App() {
     return (
@@ -44,7 +45,14 @@ export default function App() {
                                 <Route path="/tickets" element={<TicketsPage />} />
                                 <Route path="/tickets/:numero" element={<TicketDetallePage />} />
                                 <Route path="/informacion" element={<InformacionPage />} />
-                                <Route path="/seguridad" element={<SeguridadPage />} />
+                                <Route
+                                    path="/seguridad"
+                                    element={
+                                        <RequirePermission permission="seguridad.usuarios - gestionar" fallback={<Navigate to="/dashboard" replace />}>
+                                            <SeguridadPage />
+                                        </RequirePermission>
+                                    }
+                                />
                                 {/* TODO: agrega tus rutas de módulo real aquí */}
                             </Route>
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />

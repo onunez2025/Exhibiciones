@@ -93,7 +93,7 @@ export function ChecklistsPage() {
             if (append) {
                 setLoadMoreError(true);
             } else {
-                setError(t('checklist_bandeja.error_carga'));
+                setError(t('checklist_bandeja.error_cargar'));
             }
         } finally {
             if (seq === requestSeq.current) {

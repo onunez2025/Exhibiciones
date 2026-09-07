@@ -72,9 +72,13 @@ export function KPICard({
                             {value}
                         </h3>
                     )}
-                    <p className={cn('text-xs mt-1 truncate', colors.subtext)}>
-                        {subtitle}
-                    </p>
+                    {loading ? (
+                        <div className="h-3.5 w-28 bg-muted/40 rounded animate-pulse mt-1.5" />
+                    ) : (
+                        <p className={cn('text-xs mt-1 truncate', colors.subtext)}>
+                            {subtitle}
+                        </p>
+                    )}
                 </div>
 
                 <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', colors.bg)}>

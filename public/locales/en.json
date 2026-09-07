@@ -29,11 +29,6 @@
         "logout_confirm_title": "Sign out",
         "logout_confirm_message": "Are you sure you want to sign out?"
     },
-    "dashboard": {
-        "title": "Dashboard",
-        "welcome": "Welcome, {{name}}.",
-        "subtitle": "Trade Marketing Exhibitions System — Grupo Sole"
-    },
     "coming_soon": {
         "subtitle": "This module is under construction.",
         "message": "Not available yet — check back soon."
@@ -269,6 +264,7 @@
         "kpi_exhibiciones_pendientes_sub": "{{count}} pending review",
         "kpi_checklists_total": "Completed Checklists",
         "kpi_conformidad_sub": "{{percent}}% overall conformity",
+        "kpi_conformidad_sin_datos": "No checklists yet to calculate conformity",
         "kpi_tickets_pendientes": "Pending Tickets",
         "kpi_tickets_atendidos_sub": "{{count}} resolved and closed",
         "kpi_tareas_pendientes": "Admin Review",

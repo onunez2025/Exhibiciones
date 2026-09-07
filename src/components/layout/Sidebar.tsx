@@ -23,7 +23,7 @@ const ICON_ACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl
 const ICON_INACTIVE = 'flex items-center justify-center w-9 h-9 mx-auto rounded-xl text-cb-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-300 cursor-pointer';
 
 export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
-    const { user, logout } = useAuth();
+    const { user, logout, hasPermission } = useAuth();
     const { confirm } = useDialog();
     const location = useLocation();
     const { t, i18n } = useTranslation();
@@ -40,7 +40,11 @@ export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
         if (ok) logout();
     };
 
-    const isAdmin = (user?.role_name || '').toLowerCase() === 'administrador';
+    // Mismo helper que ya usa el gate de la ruta en App.tsx (RequirePermission)
+    // — antes esto comparaba role_name a mano, distinto del permiso real que
+    // exige el backend, así que un usuario con el permiso pero otro rol no
+    // veía el link aunque sí pudiera entrar, y viceversa.
+    const puedeVerSeguridad = hasPermission('seguridad.usuarios - gestionar');
 
     const menuItems = [
         { path: '/dashboard', name: t('nav.dashboard'), icon: LayoutDashboard },
@@ -48,7 +52,7 @@ export function Sidebar({ className, isExpanded, onNavigate }: SidebarProps) {
         { path: '/checklist', name: t('nav.checklist'), icon: ListChecks },
         { path: '/tickets', name: t('nav.tickets'), icon: Ticket },
         { path: '/informacion', name: t('nav.informacion'), icon: Info },
-        ...(isAdmin ? [{ path: '/seguridad', name: t('nav.seguridad'), icon: Shield }] : []),
+        ...(puedeVerSeguridad ? [{ path: '/seguridad', name: t('nav.seguridad'), icon: Shield }] : []),
     ];
 
     const userInitial = (user?.full_name || user?.username || '?').trim().charAt(0).toUpperCase();
