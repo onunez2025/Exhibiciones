@@ -37,7 +37,13 @@ export function TicketCard({ ticket, onVer }: TicketCardProps) {
             onClick={() => onVer(ticket.numero)}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onVer(ticket.numero); }}
+            aria-label={`${t('tickets_bandeja.accion_ver')}: #${ticket.numero}`}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onVer(ticket.numero);
+                }
+            }}
             className={cn(
                 'relative border border-cb-border bg-card px-4 py-3 shadow-cb-level-1 cursor-pointer',
                 'hover:shadow-cb-level-2 hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200',

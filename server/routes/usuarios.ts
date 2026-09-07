@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { getDbConnection } from '../db.js';
 import { buildUsuariosFilter, type QueryParam } from '../lib/usuariosFilter.js';
 import { checkPermission, logAudit } from '../middleware/auth.js';
+import { evaluarUltimoAdminActivo } from '../lib/rbacGuards.js';
 
 const router = Router();
 
@@ -109,9 +110,10 @@ router.post('/', async (req: Request, res: Response) => {
 
         const pool = await getDbConnection();
 
-        // Verificar unicidad de username
+        // Verificar unicidad de username — VarChar(50), igual que el INSERT
+        // de abajo y que la columna real (VC_usuario no es Unicode).
         const exists = await pool.request()
-            .input('username', sql.NVarChar(50), username)
+            .input('username', sql.VarChar(50), username)
             .query('SELECT TOP 1 IN_usuario_id FROM EXHIBICION.TB_USUARIOS WHERE VC_usuario = @username');
 
         if (exists.recordset.length > 0) {
@@ -209,16 +211,15 @@ router.put('/:id', async (req: Request, res: Response) => {
             && (current.recordset[0].rolNombre || '').trim().toLowerCase() === 'administrador';
         const seguiraSiendoAdminActivo = activo
             && (nuevoRolResult.recordset[0].nombre || '').trim().toLowerCase() === 'administrador';
-        if (eraAdminActivo && !seguiraSiendoAdminActivo) {
-            const otros = await pool.request().input('id', sql.BigInt, id).query(`
-                SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
-                JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
-                WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
-            `);
-            if (otros.recordset[0].cnt === 0) {
-                res.status(400).json({ error: 'No puedes quitarle el rol de administrador ni desactivar al único administrador activo del sistema.' });
-                return;
-            }
+
+        const otros = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
+            JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+            WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
+        `);
+        if (!evaluarUltimoAdminActivo(eraAdminActivo, seguiraSiendoAdminActivo, otros.recordset[0].cnt)) {
+            res.status(400).json({ error: 'No puedes quitarle el rol de administrador ni desactivar al único administrador activo del sistema.' });
+            return;
         }
 
         const updateResult = await pool.request()
@@ -324,16 +325,17 @@ router.patch('/:id/toggle-activo', async (req: Request, res: Response) => {
         // que el sistema se quede sin ningún admin activo.
         const esAdminActivo = current.recordset[0].activo === true
             && (current.recordset[0].rolNombre || '').trim().toLowerCase() === 'administrador';
-        if (esAdminActivo) {
-            const otros = await pool.request().input('id', sql.BigInt, id).query(`
-                SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
-                JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
-                WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
-            `);
-            if (otros.recordset[0].cnt === 0) {
-                res.status(400).json({ error: 'No puedes desactivar al único administrador activo del sistema.' });
-                return;
-            }
+        const otros = await pool.request().input('id', sql.BigInt, id).query(`
+            SELECT COUNT(*) as cnt FROM EXHIBICION.TB_USUARIOS u
+            JOIN EXHIBICION.TB_ROLES r ON u.IN_rol_id = r.IN_rol_id
+            WHERE r.VC_nombre = 'Administrador' AND u.BI_activo = 1 AND u.IN_usuario_id != @id
+        `);
+        // toggle-activo siempre invierte el estado, así que "seguirá siendo
+        // admin activo" solo es cierto si NO era admin activo (no aplica el
+        // guard) — de ahí pasarle `!esAdminActivo` como segundo argumento.
+        if (!evaluarUltimoAdminActivo(esAdminActivo, !esAdminActivo, otros.recordset[0].cnt)) {
+            res.status(400).json({ error: 'No puedes desactivar al único administrador activo del sistema.' });
+            return;
         }
 
         const result = await pool.request()

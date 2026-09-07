@@ -85,9 +85,20 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
     return (
         <div
             onClick={() => onAction('ver')}
-            role="button"
+            // role="link" (no "button"): esta tarjeta contiene un botón real
+            // enfocable (el menú de acciones) — anidar un control interactivo
+            // dentro de role="button" es un anti-patrón ARIA inválido; "link"
+            // sí tolera contenido interactivo anidado (mismo patrón que usan
+            // filas de lista clickeables con una acción propia adentro).
+            role="link"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onAction('ver'); }}
+            aria-label={`${t('exhibiciones_lista.accion_ver')}: ${exhibicion.nroExhibicion} — ${exhibicion.nombre}`}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onAction('ver');
+                }
+            }}
             className={cn(
                 'relative border border-cb-border bg-card px-4 py-3 shadow-cb-level-1 cursor-pointer',
                 'hover:shadow-cb-level-2 hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200',

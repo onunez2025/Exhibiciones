@@ -57,18 +57,27 @@ export function ChecklistsRecientesList({ items, loading }: ChecklistsRecientesP
                         <div
                             key={c.id}
                             onClick={() => navigate(`/checklist/${c.id}`)}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${t('checklist_bandeja.accion_ver')}: #${c.checklistNumber}`}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    navigate(`/checklist/${c.id}`);
+                                }
+                            }}
                             className="p-3 hover:bg-muted/40 transition-colors duration-150 cursor-pointer flex items-center justify-between gap-3 group"
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-black text-primary">#{c.checklistNumber}</span>
                                     <span className={cn(
-                                        'text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border',
+                                        'text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border',
                                         c.conforme
                                             ? 'bg-emerald-500/15 text-emerald-700 border-emerald-400/30'
                                             : 'bg-rose-500/15 text-rose-700 border-rose-400/30'
                                     )}>
-                                        {c.conforme ? t('checklists_bandeja.conforme') : t('checklists_bandeja.no_conforme')}
+                                        {c.conforme ? t('checklist_bandeja.conforme') : t('checklist_bandeja.no_conforme')}
                                     </span>
                                 </div>
                                 <p className="text-xs text-cb-text-primary font-medium truncate mt-0.5">
@@ -140,12 +149,21 @@ export function TicketsRecientesList({ items, loading }: TicketsRecientesProps) 
                         <div
                             key={tkt.numero}
                             onClick={() => navigate(`/tickets/${tkt.numero}`)}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${t('tickets_bandeja.accion_ver')}: #${tkt.numero}`}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    navigate(`/tickets/${tkt.numero}`);
+                                }
+                            }}
                             className="p-3 hover:bg-muted/40 transition-colors duration-150 cursor-pointer flex items-center justify-between gap-3 group"
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-black text-primary">#{tkt.numero}</span>
-                                    <span className={cn('text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border', estilo.badge)}>
+                                    <span className={cn('text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border', estilo.badge)}>
                                         {tkt.estadoNombre || tkt.estadoCodigo}
                                     </span>
                                 </div>
