@@ -1,6 +1,9 @@
 node_modules/
 dist/
 dist-server/
+server-dist/
+server/index.js
+mtexhibiciones.PublishSettings
 .env
 .env.bak
 *.log
@@ -9,3 +12,4 @@ Thumbs.db
 node_modules/.tmp/
 .worktrees/
 .superpowers/
+
