@@ -18,13 +18,17 @@ fotos: todo lo que hay es `POST` (crear/agregar).
 `server/routes/exhibiciones.ts`, `types/index.ts` y el esquema real vía
 `INFORMATION_SCHEMA.COLUMNS`):
 
-- `TB_EXHIBICION`, `TB_EXHIBICION_COMPONENTE` y `TB_EXHIBICION_FOTO` no
-  tienen ninguna columna de auditoría de modificación
-  (`VC_usuario_modifica`/`DT_fecha_modifica` no existen en ninguna de
-  las tres) — a diferencia de lo que se verificó para
-  `EXHIBICION.TB_REQUERIMIENTO` en la auditoría de seguridad. El rastro
-  de quién editó/quitó algo queda solo en `TB_AUDIT_LOG` vía
-  `logAudit()`, igual que atender/anular de checklists y tickets.
+- Las 3 tablas SÍ tienen columnas de auditoría de modificación —
+  `VC_usuario_modi` y `DT_fecha_modi` (nombre abreviado, no
+  `_modifica`; se me pasó en la primera lectura del esquema y `POST
+  /:id/aprobar` ya las usa). Los 3 endpoints nuevos las llenan igual que
+  `/aprobar`, además de un registro en `TB_AUDIT_LOG` vía `logAudit()`
+  para mantener el mismo rastro que atender/anular de checklists y
+  tickets.
+- `POST /:id/aprobar` ya resuelve la condición de carrera "¿sigue
+  Pendiente?" con un único `UPDATE ... WHERE IN_estado_id = 1` (sin
+  `SELECT` previo) — los 3 endpoints nuevos siguen ese mismo patrón en
+  vez de separar lectura y escritura.
 - `TB_EXHIBICION_COMPONENTE.IN_estado` y `TB_EXHIBICION_FOTO.IN_estado`
   ya son soft-delete: `GET /:id` ya filtra `IN_estado = 1` (componentes)
   e `IN_estado > 0` (fotos). Quitar un componente o foto es entonces un
@@ -145,38 +149,49 @@ export function validarExhibicionEditar(body: unknown): ValidacionEditar {
 Body: `{ nombre, tipoId, piso, pisoDetalleId }`.
 
 1. `id` inválido → 400. `validarExhibicionEditar` falla → 400.
-2. `SELECT IN_estado_id FROM TB_EXHIBICION WHERE IN_exhibicion_id = @id`
-   — no existe → 404; `IN_estado_id !== 1` → 409 "La exhibición ya no
-   está pendiente y no se puede editar."
-3. `UPDATE EXHIBICION.TB_EXHIBICION SET VC_nombre = @nombre,
+2. `UPDATE EXHIBICION.TB_EXHIBICION SET VC_nombre = @nombre,
    IN_exhibicion_tipo_id = @tipoId, VC_piso = @piso, IN_piso_detalle_id
-   = @pisoDetalleId WHERE IN_exhibicion_id = @id`.
+   = @pisoDetalleId, VC_usuario_modi = @usuario, DT_fecha_modi =
+   GETDATE() WHERE IN_exhibicion_id = @id AND IN_estado_id = 1` — mismo
+   patrón atómico que `/aprobar` (guardia de estado en el propio
+   `WHERE`, sin `SELECT` previo).
+3. `rowsAffected[0] === 0` → un segundo `SELECT 1 FROM TB_EXHIBICION
+   WHERE IN_exhibicion_id = @id` distingue 404 "Exhibición no
+   encontrada" de 409 "La exhibición ya no está pendiente y no se puede
+   editar." (mismo bloque de desambiguación que `/aprobar`).
 4. `logAudit(req, 'EXHIBICION_EDITADA', 'TB_EXHIBICION', String(id))`.
-5. Responde `200` con el mismo shape que `GET /:id` (recarga y devuelve
-   `principalResult` actualizado) — así el frontend no necesita un
-   segundo `GET` tras guardar.
+5. Responde `200` con el mismo shape que `GET /:id` (vuelve a construir
+   la respuesta con los valores recién guardados) — así el frontend no
+   necesita un segundo `GET` tras guardar.
 
 ### `DELETE /api/exhibiciones/:id/componentes/:componenteId`
 
-1. Verifica que la exhibición exista y esté Pendiente (mismo 404/409 que
-   arriba).
-2. `UPDATE EXHIBICION.TB_EXHIBICION_COMPONENTE SET IN_estado = 0 WHERE
+1. `UPDATE EXHIBICION.TB_EXHIBICION_COMPONENTE SET IN_estado = 0,
+   VC_usuario_modi = @usuario, DT_fecha_modi = GETDATE() WHERE
    IN_exhibicion_componente_id = @componenteId AND IN_exhibicion_id =
-   @id` — el `AND IN_exhibicion_id = @id` evita que alguien arme un
-   request a mano y borre un componente de OTRA exhibición.
-   `rowsAffected[0] === 0` → 404 "Componente no encontrado."
+   @id AND IN_estado = 1 AND EXISTS (SELECT 1 FROM
+   EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id AND
+   IN_estado_id = 1)` — un solo `UPDATE` atómico: el `EXISTS` gatea por
+   el estado de la exhibición (tabla distinta) en el mismo `WHERE`, sin
+   leer primero. El `AND IN_exhibicion_id = @id` evita que alguien arme
+   un request a mano y borre un componente de OTRA exhibición.
+2. `rowsAffected[0] === 0` → desambigua con un `SELECT` (exhibición no
+   existe → 404 "Exhibición no encontrada"; existe pero no está
+   Pendiente → 409 "La exhibición ya no está pendiente."; existe,
+   Pendiente, pero el componente no matcheó → 404 "Componente no
+   encontrado.").
 3. `logAudit(req, 'EXHIBICION_COMPONENTE_QUITADO', 'TB_EXHIBICION_COMPONENTE', String(componenteId))`.
 4. Responde `204`.
 
 ### `DELETE /api/exhibiciones/:id/fotos/:fotoId`
 
-Mismo patrón que componentes, sobre `TB_EXHIBICION_FOTO`. El blob en
-Azure Storage **no se borra** — mismo criterio que anular checklist/
-ticket, que tampoco revierten nada fuera de la fila; queda un archivo
-huérfano en el contenedor, aceptado (ya pasa con las fotos históricas
-duplicadas como "principal" que dejó `PROC_GUARDAR_EXHIBICION`).
-`logAudit(req, 'EXHIBICION_FOTO_ELIMINADA', 'TB_EXHIBICION_FOTO',
-String(fotoId))`. Responde `204`.
+Mismo patrón atómico (`UPDATE ... WHERE ... AND EXISTS (...)`) sobre
+`TB_EXHIBICION_FOTO`. El blob en Azure Storage **no se borra** — mismo
+criterio que anular checklist/ticket, que tampoco revierten nada fuera
+de la fila; queda un archivo huérfano en el contenedor, aceptado (ya
+pasa con las fotos históricas duplicadas como "principal" que dejó
+`PROC_GUARDAR_EXHIBICION`). `logAudit(req, 'EXHIBICION_FOTO_ELIMINADA',
+'TB_EXHIBICION_FOTO', String(fotoId))`. Responde `204`.
 
 ## Frontend
 
