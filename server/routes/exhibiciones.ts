@@ -8,6 +8,7 @@ import { buildExhibicionesFilter } from '../lib/exhibicionesFilter.js';
 import type { ExhibicionesQueryParams, QueryParam } from '../lib/exhibicionesFilter.js';
 import { mapComponentesRows } from '../lib/exhibicionComponentes.js';
 import { validarExhibicionCrear } from '../lib/exhibicionCrear.js';
+import { validarExhibicionEditar } from '../lib/exhibicionEditar.js';
 import { buildFotoUrl } from '../lib/exhibicionFotos.js';
 import { decodificarFotoBase64 } from '../lib/blobUpload.js';
 import { agruparCatalogoChecklist } from '../lib/checklistCatalogo.js';
@@ -406,6 +407,80 @@ router.get('/:id', async (req: Request, res: Response) => {
         });
     } catch (err: unknown) {
         console.error('[Exhibiciones] detalle error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
+router.put('/:id', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
+            return;
+        }
+
+        const validacion = validarExhibicionEditar(req.body);
+        if (!validacion.valido) {
+            res.status(400).json({ error: validacion.error });
+            return;
+        }
+        const { nombre, tipoId, piso, pisoDetalleId } = validacion.datos;
+
+        const pool = await getDbConnection();
+
+        // UPDATE con guardia de estado en el mismo WHERE — mismo patrón
+        // que POST /:id/aprobar: una sola escritura atómica, sin SELECT
+        // previo, así dos ediciones (o una edición y una aprobación)
+        // concurrentes no pueden pisarse.
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('nombre', sql.VarChar(150), nombre)
+            .input('tipoId', sql.Int, tipoId)
+            .input('piso', sql.VarChar(100), piso)
+            .input('pisoDetalleId', sql.Int, pisoDetalleId)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_EXHIBICION
+                SET VC_nombre = @nombre, IN_exhibicion_tipo_id = @tipoId,
+                    VC_piso = @piso, IN_piso_detalle_id = @pisoDetalleId,
+                    VC_usuario_modi = @usuario, DT_fecha_modi = GETDATE()
+                WHERE IN_exhibicion_id = @id AND IN_estado_id = 1
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            const existsResult = await pool.request()
+                .input('id', sql.BigInt, id)
+                .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+            if (existsResult.recordset.length === 0) {
+                res.status(404).json({ error: 'Exhibición no encontrada.' });
+            } else {
+                res.status(409).json({ error: 'La exhibición ya no está pendiente y no se puede editar.' });
+            }
+            return;
+        }
+
+        await logAudit(req, 'EXHIBICION_EDITADA', 'TB_EXHIBICION', String(id));
+
+        const tipoResult = await pool.request()
+            .input('tipoId', sql.Int, tipoId)
+            .query(`SELECT VC_descripcion as nombre FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_TIPO' AND CH_activo = '1' AND IN_id = @tipoId`);
+        const pisoDetalleResult = pisoDetalleId
+            ? await pool.request()
+                .input('pisoDetalleId', sql.Int, pisoDetalleId)
+                .query(`SELECT VC_descripcion as nombre FROM dbo.PV_TABLA WHERE VC_tabla = 'EXHIBICION_PISO_DETALLE' AND CH_activo = '1' AND IN_id = @pisoDetalleId`)
+            : null;
+
+        res.json({
+            id,
+            nombre,
+            tipoId,
+            tipoNombre: tipoResult.recordset[0]?.nombre ?? null,
+            piso,
+            pisoDetalleId,
+            pisoDetalleNombre: pisoDetalleResult?.recordset[0]?.nombre ?? null,
+        });
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] editar error:', err instanceof Error ? err.message : err);
         res.status(500).json({ error: safeError(err) });
     }
 });
