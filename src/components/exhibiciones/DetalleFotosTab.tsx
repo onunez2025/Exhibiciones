@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageOff, Plus, Loader2, X, AlertCircle } from 'lucide-react';
-import { apiClient } from '../../services/apiClient.js';
+import { apiClient, ApiError } from '../../services/apiClient.js';
 import type { AgregarFotoInput, ExhibicionFoto } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 
@@ -16,17 +16,18 @@ export interface DetalleFotosTabProps {
 // el layout de la grilla — se reemplaza por un placeholder en vez de dejar
 // un ícono roto del navegador.
 function Foto({
-    foto, className, onEliminar, eliminando,
+    foto, className, wrapperClassName = 'relative', onEliminar, eliminando,
 }: {
     foto: ExhibicionFoto;
     className: string;
+    wrapperClassName?: string;
     onEliminar?: (id: number) => void;
     eliminando: boolean;
 }) {
     const { t } = useTranslation();
     const [failed, setFailed] = useState(false);
     return (
-        <div className="relative">
+        <div className={wrapperClassName}>
             {failed ? (
                 <div className={`${className} flex items-center justify-center bg-muted text-cb-text-secondary`}>
                     <ImageOff className="w-6 h-6" />
@@ -114,6 +115,14 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada, onFotoEli
             onFotoEliminada?.(id);
         } catch (err) {
             setError(err instanceof Error ? err.message : t('exhibicion_detalle.error_eliminar_foto'));
+            // 404 = ya no existe del lado del servidor (otra pestaña la
+            // eliminó antes) — se saca igual de la lista local aunque se
+            // muestre el error, en vez de dejar una foto fantasma que
+            // cualquier acción futura sobre ella volvería a fallar con el
+            // mismo 404.
+            if (err instanceof ApiError && err.status === 404) {
+                onFotoEliminada?.(id);
+            }
         } finally {
             setEliminandoId(null);
         }
@@ -151,6 +160,7 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada, onFotoEli
                             <Foto
                                 foto={principal}
                                 className="w-full max-w-xs rounded-xl border border-cb-border"
+                                wrapperClassName="relative w-fit"
                                 onEliminar={onFotoEliminada ? handleEliminar : undefined}
                                 eliminando={eliminandoId === principal.id}
                             />

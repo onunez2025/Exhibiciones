@@ -164,7 +164,7 @@ export function ExhibicionEditarPage() {
                                     <input type="text" className={INPUT_CLASS} value={nombre} onChange={(e) => setNombre(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className={LABEL_CLASS}>{t('exhibiciones_lista.filtro_tipo')}</label>
+                                    <label className={LABEL_CLASS}>{t('exhibicion_editar.campo_tipo')}</label>
                                     <select className={INPUT_CLASS} value={tipoId} onChange={(e) => setTipoId(e.target.value)}>
                                         <option value="">{t('exhibicion_crear.selecciona')}</option>
                                         {opciones.tipos.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}

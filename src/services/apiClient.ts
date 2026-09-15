@@ -4,6 +4,20 @@ const API_BASE_URL =
     (import.meta.env.VITE_API_URL as string | undefined) ||
     (import.meta.env.PROD ? '' : 'http://localhost:3000') + '/api';
 
+// Lleva el status HTTP junto con el mensaje — extends Error así que todo
+// caller existente que hace `err instanceof Error ? err.message : ...`
+// sigue funcionando sin cambios; los que necesitan distinguir un status
+// específico (ej. 404) pueden chequear `err instanceof ApiError`.
+export class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+    }
+}
+
 async function request<T>(
     method: string,
     endpoint: string,
@@ -37,7 +51,7 @@ async function request<T>(
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(error.error || `HTTP ${response.status}`);
+        throw new ApiError(error.error || `HTTP ${response.status}`, response.status);
     }
 
     if (response.status === 204) return undefined as T;

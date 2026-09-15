@@ -512,10 +512,15 @@ router.post('/:id/componentes', async (req: Request, res: Response) => {
 
         const pool = await getDbConnection();
 
-        const exists = await pool.request().input('id', sql.BigInt, id)
-            .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
-        if (exists.recordset.length === 0) {
+        const estadoResult = await pool.request().input('id', sql.BigInt, id)
+            .query('SELECT IN_estado_id FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+        const exhibicionExistente = estadoResult.recordset[0];
+        if (!exhibicionExistente) {
             res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+        if (exhibicionExistente.IN_estado_id !== 1) {
+            res.status(409).json({ error: 'La exhibición ya no está pendiente y no se puede editar.' });
             return;
         }
 
@@ -562,7 +567,7 @@ router.delete('/:id/componentes/:componenteId', async (req: Request, res: Respon
         const id = Number(req.params.id);
         const componenteId = Number(req.params.componenteId);
         if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(componenteId) || componenteId <= 0) {
-            res.status(400).json({ error: 'Id inválido.' });
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
             return;
         }
 
@@ -620,10 +625,15 @@ router.post('/:id/fotos', async (req: Request, res: Response) => {
         }
 
         const pool = await getDbConnection();
-        const exists = await pool.request().input('id', sql.BigInt, id)
-            .query('SELECT 1 FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
-        if (exists.recordset.length === 0) {
+        const estadoResult = await pool.request().input('id', sql.BigInt, id)
+            .query('SELECT IN_estado_id FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+        const exhibicionExistente = estadoResult.recordset[0];
+        if (!exhibicionExistente) {
             res.status(404).json({ error: 'Exhibición no encontrada.' });
+            return;
+        }
+        if (exhibicionExistente.IN_estado_id !== 1) {
+            res.status(409).json({ error: 'La exhibición ya no está pendiente y no se puede editar.' });
             return;
         }
 
@@ -689,7 +699,7 @@ router.delete('/:id/fotos/:fotoId', async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         const fotoId = Number(req.params.fotoId);
         if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(fotoId) || fotoId <= 0) {
-            res.status(400).json({ error: 'Id inválido.' });
+            res.status(400).json({ error: 'Id de exhibición inválido.' });
             return;
         }
 

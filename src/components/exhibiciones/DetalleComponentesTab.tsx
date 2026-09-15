@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, X, Loader2, AlertCircle } from 'lucide-react';
-import { apiClient } from '../../services/apiClient.js';
+import { apiClient, ApiError } from '../../services/apiClient.js';
 import type { ExhibicionComponenteItem } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { AgregarComponenteModal } from './AgregarComponenteModal.js';
@@ -73,6 +73,13 @@ export function DetalleComponentesTab({ exhibicionId, carcasas, productos, onCom
             onComponenteQuitado?.(id);
         } catch (err) {
             setErrorQuitar(err instanceof Error ? err.message : t('exhibicion_detalle.error_quitar_componente'));
+            // 404 = ya no existe del lado del servidor (otra pestaña lo quitó
+            // antes) — se saca igual de la lista local aunque se muestre el
+            // error, en vez de dejar una fila fantasma que cualquier acción
+            // futura sobre ella volvería a fallar con el mismo 404.
+            if (err instanceof ApiError && err.status === 404) {
+                onComponenteQuitado?.(id);
+            }
         } finally {
             setQuitandoId(null);
         }
