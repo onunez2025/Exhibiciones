@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageOff, Plus, Loader2 } from 'lucide-react';
+import { ImageOff, Plus, Loader2, X, AlertCircle } from 'lucide-react';
 import { apiClient } from '../../services/apiClient.js';
 import type { AgregarFotoInput, ExhibicionFoto } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
@@ -9,21 +9,44 @@ export interface DetalleFotosTabProps {
     exhibicionId: number;
     fotos: ExhibicionFoto[];
     onFotoAgregada: (foto: ExhibicionFoto) => void;
+    onFotoEliminada?: (id: number) => void;
 }
 
 // Una URL de foto vencida (SAS expirado) o un blob borrado no debe romper
 // el layout de la grilla — se reemplaza por un placeholder en vez de dejar
 // un ícono roto del navegador.
-function Foto({ url, className }: { url: string; className: string }) {
+function Foto({
+    foto, className, onEliminar, eliminando,
+}: {
+    foto: ExhibicionFoto;
+    className: string;
+    onEliminar?: (id: number) => void;
+    eliminando: boolean;
+}) {
+    const { t } = useTranslation();
     const [failed, setFailed] = useState(false);
-    if (failed) {
-        return (
-            <div className={`${className} flex items-center justify-center bg-muted text-cb-text-secondary`}>
-                <ImageOff className="w-6 h-6" />
-            </div>
-        );
-    }
-    return <img src={url} onError={() => setFailed(true)} className={`${className} object-cover`} alt="" />;
+    return (
+        <div className="relative">
+            {failed ? (
+                <div className={`${className} flex items-center justify-center bg-muted text-cb-text-secondary`}>
+                    <ImageOff className="w-6 h-6" />
+                </div>
+            ) : (
+                <img src={foto.url} onError={() => setFailed(true)} className={`${className} object-cover`} alt="" />
+            )}
+            {onEliminar && (
+                <button
+                    type="button"
+                    onClick={() => onEliminar(foto.id)}
+                    disabled={eliminando}
+                    title={t('exhibicion_detalle.accion_eliminar_foto')}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-rose-600 transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                >
+                    {eliminando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                </button>
+            )}
+        </div>
+    );
 }
 
 // Convierte un File a base64 + contentType leyendo el data: URL que arma
@@ -43,10 +66,11 @@ function leerArchivoComoBase64(file: File): Promise<{ base64: string; contentTyp
     });
 }
 
-export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: DetalleFotosTabProps) {
+export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada, onFotoEliminada }: DetalleFotosTabProps) {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [subiendo, setSubiendo] = useState(false);
+    const [eliminandoId, setEliminandoId] = useState<number | null>(null);
     const [error, setError] = useState('');
 
     const principal = fotos.find(f => f.esFotoPrincipal);
@@ -82,6 +106,19 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
         }
     };
 
+    const handleEliminar = async (id: number) => {
+        setEliminandoId(id);
+        setError('');
+        try {
+            await apiClient.delete(`/exhibiciones/${exhibicionId}/fotos/${id}`);
+            onFotoEliminada?.(id);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : t('exhibicion_detalle.error_eliminar_foto'));
+        } finally {
+            setEliminandoId(null);
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div>
@@ -99,6 +136,7 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
 
             {error && (
                 <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-sm font-semibold">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
                     {error}
                 </div>
             )}
@@ -110,7 +148,12 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
                     {principal && (
                         <div>
                             <p className="text-[10px] font-black text-cb-text-secondary uppercase tracking-wider mb-1.5">{t('exhibicion_detalle.foto_principal')}</p>
-                            <Foto url={principal.url} className="w-full max-w-xs rounded-xl border border-cb-border" />
+                            <Foto
+                                foto={principal}
+                                className="w-full max-w-xs rounded-xl border border-cb-border"
+                                onEliminar={onFotoEliminada ? handleEliminar : undefined}
+                                eliminando={eliminandoId === principal.id}
+                            />
                         </div>
                     )}
                     {resto.length > 0 && (
@@ -118,7 +161,13 @@ export function DetalleFotosTab({ exhibicionId, fotos, onFotoAgregada }: Detalle
                             <p className="text-[10px] font-black text-cb-text-secondary uppercase tracking-wider mb-1.5">{t('exhibicion_detalle.foto_componente')}</p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 {resto.map(foto => (
-                                    <Foto key={foto.id} url={foto.url} className="aspect-square rounded-xl border border-cb-border" />
+                                    <Foto
+                                        key={foto.id}
+                                        foto={foto}
+                                        className="aspect-square rounded-xl border border-cb-border"
+                                        onEliminar={onFotoEliminada ? handleEliminar : undefined}
+                                        eliminando={eliminandoId === foto.id}
+                                    />
                                 ))}
                             </div>
                         </div>
