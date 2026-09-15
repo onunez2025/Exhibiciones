@@ -684,6 +684,58 @@ router.post('/:id/fotos', async (req: Request, res: Response) => {
     }
 });
 
+router.delete('/:id/fotos/:fotoId', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        const fotoId = Number(req.params.fotoId);
+        if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(fotoId) || fotoId <= 0) {
+            res.status(400).json({ error: 'Id inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        // Mismo patrón atómico que quitar componente. No borra el blob
+        // en Azure Storage — mismo criterio que anular checklist/ticket,
+        // que tampoco revierten nada fuera de la fila (ver spec).
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('fotoId', sql.BigInt, fotoId)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_EXHIBICION_FOTO
+                SET IN_estado = 0, VC_usuario_modi = @usuario, DT_fecha_modi = GETDATE()
+                WHERE IN_exhibicion_foto_id = @fotoId
+                  AND IN_exhibicion_id = @id
+                  AND IN_estado = 1
+                  AND EXISTS (
+                      SELECT 1 FROM EXHIBICION.TB_EXHIBICION
+                      WHERE IN_exhibicion_id = @id AND IN_estado_id = 1
+                  )
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            const estadoResult = await pool.request().input('id', sql.BigInt, id)
+                .query('SELECT IN_estado_id FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+            const exhibicion = estadoResult.recordset[0];
+            if (!exhibicion) {
+                res.status(404).json({ error: 'Exhibición no encontrada.' });
+            } else if (exhibicion.IN_estado_id !== 1) {
+                res.status(409).json({ error: 'La exhibición ya no está pendiente y no se puede editar.' });
+            } else {
+                res.status(404).json({ error: 'Foto no encontrada.' });
+            }
+            return;
+        }
+
+        await logAudit(req, 'EXHIBICION_FOTO_ELIMINADA', 'TB_EXHIBICION_FOTO', String(fotoId));
+        res.status(204).send();
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] eliminar foto error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.post('/:id/checklist', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
