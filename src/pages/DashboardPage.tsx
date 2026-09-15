@@ -16,7 +16,6 @@ import { apiClient } from '../services/apiClient.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
 import { MobileMenuButton } from '../components/layout/MobileMenuButton.js';
 import { KPICard } from '../components/dashboard/KPICard.js';
-import { ChecklistsRecientesList, TicketsRecientesList } from '../components/dashboard/ActividadRecienteList.js';
 import type { DashboardResumenResponse } from '../types/index.js';
 
 export function DashboardPage() {
@@ -216,18 +215,6 @@ export function DashboardPage() {
                                 </div>
                             </button>
                         </div>
-                    </div>
-
-                    {/* Grilla de Actividad Reciente (2 Columnas) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <ChecklistsRecientesList
-                            items={data?.ultimosChecklists ?? []}
-                            loading={loading}
-                        />
-                        <TicketsRecientesList
-                            items={data?.ultimosTickets ?? []}
-                            loading={loading}
-                        />
                     </div>
                 </div>
             </div>
