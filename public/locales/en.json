@@ -71,6 +71,7 @@
         "accion_ver": "View",
         "accion_checklist": "Checklist",
         "accion_ticket": "Ticket",
+        "accion_editar": "Edit",
         "proximamente_titulo": "Coming soon",
         "proximamente_mensaje": "This feature isn't available yet.",
         "vacio": "No exhibits found with the applied filters.",
@@ -108,7 +109,11 @@
         "error_cargar_catalogo": "Couldn't load the catalog.",
         "error_agregar_componente": "Couldn't add the component.",
         "error_agregar_foto": "Couldn't upload the photo.",
-        "error_foto_grande": "The photo is too large (max 8MB)."
+        "error_foto_grande": "The photo is too large (max 8MB).",
+        "accion_quitar": "Remove",
+        "accion_eliminar_foto": "Delete photo",
+        "error_quitar_componente": "Couldn't remove the component.",
+        "error_eliminar_foto": "Couldn't delete the photo."
     },
     "exhibicion_crear": {
         "title": "New Exhibit",
@@ -121,6 +126,20 @@
         "accion_guardar": "Save",
         "error_cargar_opciones": "Couldn't load the form options.",
         "error_guardar": "Couldn't create the exhibit."
+    },
+    "exhibicion_editar": {
+        "title": "Edit Exhibit",
+        "subtitle": "Update the details, components and photos",
+        "campo_nombre": "Exhibit Name",
+        "accion_guardar": "Save changes",
+        "guardado_ok": "Changes saved successfully.",
+        "error_cargar": "Couldn't load the exhibit.",
+        "error_cargar_opciones": "Couldn't load the form options.",
+        "error_guardar": "Couldn't save the changes.",
+        "no_pendiente_titulo": "This exhibit is no longer pending",
+        "no_pendiente_mensaje": "Only exhibits that haven't been approved yet can be edited.",
+        "seccion_componentes": "Components",
+        "seccion_fotos": "Photos"
     },
     "checklist_crear": {
         "title": "New Checklist",

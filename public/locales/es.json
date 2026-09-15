@@ -71,6 +71,7 @@
         "accion_ver": "Ver",
         "accion_checklist": "Checklist",
         "accion_ticket": "Ticket",
+        "accion_editar": "Editar",
         "proximamente_titulo": "Próximamente",
         "proximamente_mensaje": "Esta función todavía no está disponible.",
         "vacio": "No se encontraron exhibiciones con los filtros aplicados.",
@@ -108,7 +109,11 @@
         "error_cargar_catalogo": "No se pudo cargar el catálogo.",
         "error_agregar_componente": "No se pudo agregar el componente.",
         "error_agregar_foto": "No se pudo subir la foto.",
-        "error_foto_grande": "La foto es demasiado grande (máximo 8MB)."
+        "error_foto_grande": "La foto es demasiado grande (máximo 8MB).",
+        "accion_quitar": "Quitar",
+        "accion_eliminar_foto": "Eliminar foto",
+        "error_quitar_componente": "No se pudo quitar el componente.",
+        "error_eliminar_foto": "No se pudo eliminar la foto."
     },
     "exhibicion_crear": {
         "title": "Nueva Exhibición",
@@ -121,6 +126,20 @@
         "accion_guardar": "Guardar",
         "error_cargar_opciones": "No se pudieron cargar las opciones del formulario.",
         "error_guardar": "No se pudo crear la exhibición."
+    },
+    "exhibicion_editar": {
+        "title": "Editar Exhibición",
+        "subtitle": "Actualiza los datos, componentes y fotos",
+        "campo_nombre": "Nombre de Exhibición",
+        "accion_guardar": "Guardar cambios",
+        "guardado_ok": "Los cambios se guardaron correctamente.",
+        "error_cargar": "No se pudo cargar la exhibición.",
+        "error_cargar_opciones": "No se pudieron cargar las opciones del formulario.",
+        "error_guardar": "No se pudieron guardar los cambios.",
+        "no_pendiente_titulo": "Esta exhibición ya no está pendiente",
+        "no_pendiente_mensaje": "Solo se pueden editar exhibiciones que aún no fueron aprobadas.",
+        "seccion_componentes": "Componentes",
+        "seccion_fotos": "Fotos"
     },
     "checklist_crear": {
         "title": "Nuevo Checklist",
