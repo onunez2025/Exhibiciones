@@ -73,13 +73,36 @@ export interface ExhibicionDetalle {
     clienteNombre: string;
     sucursalNombre: string;
     piso: string | null;
+    tipoId: number;
     tipoNombre: string | null;
+    pisoDetalleId: number | null;
     pisoDetalleNombre: string | null;
     estadoId: 1 | 2;
     fechaCrea: string;
     canAprobar: boolean;
     componentes: ExhibicionComponentesAgrupados;
     fotos: ExhibicionFoto[];
+}
+
+export interface EditarExhibicionInput {
+    nombre: string;
+    tipoId: number;
+    piso: string | null;
+    pisoDetalleId: number | null;
+}
+
+// Shape real de la respuesta de PUT /:id — un subconjunto de
+// ExhibicionDetalle (sin estadoId/canAprobar/componentes/fotos/etc.,
+// que esa ruta no toca ni recalcula). Tiparlo como ExhibicionDetalle
+// completo sería engañoso: el objeto real no trae esos campos.
+export interface EditarExhibicionResponse {
+    id: number;
+    nombre: string;
+    tipoId: number;
+    tipoNombre: string | null;
+    piso: string | null;
+    pisoDetalleId: number | null;
+    pisoDetalleNombre: string | null;
 }
 
 export interface AprobarExhibicionResponse {
