@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Loader2, AlertCircle, Check, X } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, Check } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useDialog } from '../context/DialogContext.js';
 import { SIATC_THEME } from '../utils/siatc-theme.js';
@@ -155,39 +155,61 @@ export function ChecklistCrearPage() {
                                     <div className="px-4 py-2.5 bg-muted text-xs font-black uppercase tracking-wider text-cb-text-secondary">
                                         {categoria.tipoNombre}
                                     </div>
+                                    {/* Encabezado de columnas — imita el formato de tabla del
+                                        formulario impreso original (casillas Conforme/No Conforme
+                                        por columna), reemplazando los botones tipo pastilla. */}
+                                    <div className="flex items-center gap-3 px-4 pt-3 pb-1">
+                                        <span className="flex-1" />
+                                        <span className="w-14 shrink-0 text-center text-[10px] font-black uppercase tracking-wider text-cb-text-secondary">
+                                            {t('checklist_crear.conforme')}
+                                        </span>
+                                        <span className="w-14 shrink-0 text-center text-[10px] font-black uppercase tracking-wider text-cb-text-secondary">
+                                            {t('checklist_crear.no_conforme')}
+                                        </span>
+                                    </div>
                                     <div className="divide-y divide-cb-border">
                                         {categoria.items.map(item => {
                                             const r = respuestas[item.visualCodigo];
                                             return (
-                                                <div key={item.visualCodigo} className="p-4 space-y-2">
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <span className="text-sm font-semibold text-cb-text-primary">{item.nombre}</span>
-                                                        <div className="flex gap-2 shrink-0">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setRespuesta(item.visualCodigo, false)}
+                                                <div key={item.visualCodigo} className="p-4 pt-3 space-y-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex-1 text-sm font-semibold text-cb-text-primary">{item.nombre}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setRespuesta(item.visualCodigo, false)}
+                                                            aria-label={`${item.nombre}: ${t('checklist_crear.conforme')}`}
+                                                            aria-pressed={r ? !r.desconforme : false}
+                                                            className="w-14 shrink-0 flex items-center justify-center"
+                                                        >
+                                                            <span
                                                                 className={cn(
-                                                                    'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors duration-150 cursor-pointer',
+                                                                    'w-6 h-6 flex items-center justify-center rounded border-2 transition-colors duration-150 cursor-pointer',
                                                                     r && !r.desconforme
-                                                                        ? 'bg-emerald-500/15 text-emerald-700 border-emerald-400/30'
-                                                                        : 'bg-card text-cb-text-secondary border-cb-border hover:bg-muted'
+                                                                        ? 'bg-primary border-primary'
+                                                                        : 'bg-card border-cb-border hover:border-primary/50'
                                                                 )}
                                                             >
-                                                                <Check className="w-3.5 h-3.5" /> {t('checklist_crear.conforme')}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setRespuesta(item.visualCodigo, true)}
+                                                                {r && !r.desconforme && <Check className="w-4 h-4 text-primary-foreground" strokeWidth={3} />}
+                                                            </span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setRespuesta(item.visualCodigo, true)}
+                                                            aria-label={`${item.nombre}: ${t('checklist_crear.no_conforme')}`}
+                                                            aria-pressed={r?.desconforme ?? false}
+                                                            className="w-14 shrink-0 flex items-center justify-center"
+                                                        >
+                                                            <span
                                                                 className={cn(
-                                                                    'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors duration-150 cursor-pointer',
+                                                                    'w-6 h-6 flex items-center justify-center rounded border-2 transition-colors duration-150 cursor-pointer',
                                                                     r?.desconforme
-                                                                        ? 'bg-rose-500/15 text-rose-700 border-rose-400/30'
-                                                                        : 'bg-card text-cb-text-secondary border-cb-border hover:bg-muted'
+                                                                        ? 'bg-[#DF2935] border-[#DF2935]'
+                                                                        : 'bg-card border-cb-border hover:border-[#DF2935]/50'
                                                                 )}
                                                             >
-                                                                <X className="w-3.5 h-3.5" /> {t('checklist_crear.no_conforme')}
-                                                            </button>
-                                                        </div>
+                                                                {r?.desconforme && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                                                            </span>
+                                                        </button>
                                                     </div>
                                                     {r?.desconforme && (
                                                         <textarea
