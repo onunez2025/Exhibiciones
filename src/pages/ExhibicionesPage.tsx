@@ -126,7 +126,7 @@ export function ExhibicionesPage() {
         return () => observer.disconnect();
     }, [isDesktop, items.length, total, loadingMore, loadMoreError, page, fetchPage]);
 
-    const handleAction = (action: 'ver' | 'checklist' | 'ticket', id: number) => {
+    const handleAction = (action: 'ver' | 'checklist' | 'ticket' | 'editar', id: number) => {
         if (action === 'ver') {
             navigate(`/exhibiciones/${id}`, { viewTransition: true });
             return;
@@ -137,6 +137,10 @@ export function ExhibicionesPage() {
         }
         if (action === 'ticket') {
             navigate(`/exhibiciones/${id}/tickets/nuevo`, { viewTransition: true });
+            return;
+        }
+        if (action === 'editar') {
+            navigate(`/exhibiciones/${id}/editar`, { viewTransition: true });
             return;
         }
         alert(t('exhibiciones_lista.proximamente_titulo'), t('exhibiciones_lista.proximamente_mensaje'));

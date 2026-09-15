@@ -9,6 +9,7 @@ import { PerfilPage } from './pages/PerfilPage.js';
 import { ExhibicionesPage } from './pages/ExhibicionesPage.js';
 import { ExhibicionDetallePage } from './pages/ExhibicionDetallePage.js';
 import { ExhibicionCrearPage } from './pages/ExhibicionCrearPage.js';
+import { ExhibicionEditarPage } from './pages/ExhibicionEditarPage.js';
 import { ChecklistCrearPage } from './pages/ChecklistCrearPage.js';
 import { TicketCrearPage } from './pages/TicketCrearPage.js';
 import { ChecklistsPage } from './pages/ChecklistsPage.js';
@@ -38,6 +39,7 @@ export default function App() {
                                 <Route path="/exhibiciones" element={<ExhibicionesPage />} />
                                 <Route path="/exhibiciones/nueva" element={<ExhibicionCrearPage />} />
                                 <Route path="/exhibiciones/:id" element={<ExhibicionDetallePage />} />
+                                <Route path="/exhibiciones/:id/editar" element={<ExhibicionEditarPage />} />
                                 <Route path="/exhibiciones/:id/checklist/nueva" element={<ChecklistCrearPage />} />
                                 <Route path="/exhibiciones/:id/tickets/nuevo" element={<TicketCrearPage />} />
                                 <Route path="/checklist" element={<ChecklistsPage />} />
