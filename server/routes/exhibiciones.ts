@@ -557,6 +557,60 @@ router.post('/:id/componentes', async (req: Request, res: Response) => {
     }
 });
 
+router.delete('/:id/componentes/:componenteId', async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        const componenteId = Number(req.params.componenteId);
+        if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(componenteId) || componenteId <= 0) {
+            res.status(400).json({ error: 'Id inválido.' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        // Un solo UPDATE atómico: el EXISTS gatea por el estado de la
+        // exhibición (tabla distinta) en el mismo WHERE, sin leer primero
+        // — mismo espíritu que el guard de PUT /:id, extendido a un JOIN
+        // implícito. AND IN_exhibicion_id = @id evita borrar un
+        // componente de otra exhibición con un request armado a mano.
+        const updateResult = await pool.request()
+            .input('id', sql.BigInt, id)
+            .input('componenteId', sql.BigInt, componenteId)
+            .input('usuario', sql.VarChar(50), req.user?.username ?? 'system')
+            .query(`
+                UPDATE EXHIBICION.TB_EXHIBICION_COMPONENTE
+                SET IN_estado = 0, VC_usuario_modi = @usuario, DT_fecha_modi = GETDATE()
+                WHERE IN_exhibicion_componente_id = @componenteId
+                  AND IN_exhibicion_id = @id
+                  AND IN_estado = 1
+                  AND EXISTS (
+                      SELECT 1 FROM EXHIBICION.TB_EXHIBICION
+                      WHERE IN_exhibicion_id = @id AND IN_estado_id = 1
+                  )
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            const estadoResult = await pool.request().input('id', sql.BigInt, id)
+                .query('SELECT IN_estado_id FROM EXHIBICION.TB_EXHIBICION WHERE IN_exhibicion_id = @id');
+            const exhibicion = estadoResult.recordset[0];
+            if (!exhibicion) {
+                res.status(404).json({ error: 'Exhibición no encontrada.' });
+            } else if (exhibicion.IN_estado_id !== 1) {
+                res.status(409).json({ error: 'La exhibición ya no está pendiente y no se puede editar.' });
+            } else {
+                res.status(404).json({ error: 'Componente no encontrado.' });
+            }
+            return;
+        }
+
+        await logAudit(req, 'EXHIBICION_COMPONENTE_QUITADO', 'TB_EXHIBICION_COMPONENTE', String(componenteId));
+        res.status(204).send();
+    } catch (err: unknown) {
+        console.error('[Exhibiciones] quitar componente error:', err instanceof Error ? err.message : err);
+        res.status(500).json({ error: safeError(err) });
+    }
+});
+
 router.post('/:id/fotos', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
