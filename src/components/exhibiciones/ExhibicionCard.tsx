@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, ListChecks, Ticket, Image as ImageIcon, Store, Tag, MapPin, MoreVertical } from 'lucide-react';
+import { Eye, ListChecks, Ticket, Pencil, Image as ImageIcon, Store, Tag, MapPin, MoreVertical } from 'lucide-react';
 import type { Exhibicion } from '../../types/index.js';
 import { SIATC_THEME } from '../../utils/siatc-theme.js';
 import { cn } from '../../utils/cn.js';
@@ -8,7 +8,7 @@ import { getEstadoEstilo, getEstadoLabelKey } from '../../utils/estadoExhibicion
 
 export interface ExhibicionCardProps {
     exhibicion: Exhibicion;
-    onAction: (action: 'ver' | 'checklist' | 'ticket') => void;
+    onAction: (action: 'ver' | 'checklist' | 'ticket' | 'editar') => void;
 }
 
 function InfoField({ icon: Icon, label, value }: { icon: typeof Store; label: string; value: string }) {
@@ -67,7 +67,7 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
         if (next) window.dispatchEvent(new CustomEvent('exhibicion-card-menu-open', { detail: exhibicion.id }));
     };
 
-    const handleAction = (action: 'ver' | 'checklist' | 'ticket') => {
+    const handleAction = (action: 'ver' | 'checklist' | 'ticket' | 'editar') => {
         setMenuOpen(false);
         onAction(action);
     };
@@ -146,6 +146,11 @@ export function ExhibicionCard({ exhibicion, onAction }: ExhibicionCardProps) {
                             <button type="button" onClick={() => handleAction('ticket')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-cb-text-primary hover:bg-muted transition-colors duration-100 cursor-pointer">
                                 <Ticket className="w-3.5 h-3.5 text-cb-text-secondary" /> {t('exhibiciones_lista.accion_ticket')}
                             </button>
+                            {exhibicion.estadoId === 1 && (
+                                <button type="button" onClick={() => handleAction('editar')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-cb-text-primary hover:bg-muted transition-colors duration-100 cursor-pointer">
+                                    <Pencil className="w-3.5 h-3.5 text-cb-text-secondary" /> {t('exhibiciones_lista.accion_editar')}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
